@@ -1,0 +1,19 @@
+@server_HostAddress = http://localhost:5273
+
+POST {{server_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "developer@example.com",
+  "password": "ChangeThisPassword123!"
+}
+
+###
+
+POST {{server_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "developer@example.com",
+  "password": "ChangeThisPassword123!"
+}
