@@ -448,4 +448,4 @@ Before presenting Enigma as a finished multi-user commercial service, consider a
 
 ## License
 
-No open-source license is currently included. Unless a license is added, the source remains under the repository owner's default copyright rights and should not be treated as freely reusable or redistributable.
+Enigma is open-source software released under the [MIT License](LICENSE). You may use, copy, modify, merge, publish, distribute, sublicense, and sell copies subject to the license's copyright-notice and permission-notice requirements.

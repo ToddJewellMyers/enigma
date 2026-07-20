@@ -18,7 +18,7 @@
 - [x] Disable Node integration.
 - [x] Provide parent and inherited entitlements.
 - [x] Provide a 1024×1024 application icon source.
-- [ ] Add the selected open-source license.
+- [x] Add the selected open-source license (MIT).
 - [ ] Run a signed build with the distribution profile.
 - [ ] Inspect signatures and entitlements with `codesign`.
 - [ ] Install and test the signed build on a clean macOS account.
