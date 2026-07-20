@@ -8,6 +8,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using server.Data;
 using server.Middleware;
 using server.Monitoring;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +49,7 @@ builder.Services.AddSwaggerGen();
 var databaseConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
         "ConnectionStrings:DefaultConnection must contain a PostgreSQL connection string.");
+databaseConnectionString = NormalizePostgresConnectionString(databaseConnectionString);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(databaseConnectionString));
@@ -63,13 +65,20 @@ if (builder.Configuration.GetValue<bool>("Proxy:ForwardedHeadersEnabled"))
     });
 }
 
-var allowedOrigins = builder.Configuration
+var configuredOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
     .Get<string[]>()?
     .Select(origin => origin.Trim().TrimEnd('/'))
     .Where(origin => !string.IsNullOrWhiteSpace(origin))
-    .Distinct(StringComparer.OrdinalIgnoreCase)
     .ToArray() ?? [];
+
+var renderHostname = builder.Configuration["RENDER_EXTERNAL_HOSTNAME"];
+var allowedOrigins = configuredOrigins
+    .Concat(string.IsNullOrWhiteSpace(renderHostname)
+        ? Enumerable.Empty<string>()
+        : [$"https://{renderHostname}"])
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
 
 if (allowedOrigins.Length == 0)
 {
@@ -100,6 +109,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
+{
+    await using var migrationScope = app.Services.CreateAsyncScope();
+    var database = migrationScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await database.Database.MigrateAsync();
+}
+
 if (app.Configuration.GetValue<bool>("Proxy:ForwardedHeadersEnabled"))
     app.UseForwardedHeaders();
 
@@ -111,6 +127,8 @@ if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"
 
 app.UseExceptionHandler();
 app.UseMiddleware<RequestErrorLoggingMiddleware>();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 if (app.Environment.IsDevelopment())
 {
@@ -131,7 +149,29 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready")
 });
+app.MapFallbackToFile("index.html");
 
 app.Run();
+
+static string NormalizePostgresConnectionString(string connectionString)
+{
+    if (!Uri.TryCreate(connectionString, UriKind.Absolute, out var uri) ||
+        (uri.Scheme != "postgres" && uri.Scheme != "postgresql"))
+        return connectionString;
+
+    var credentials = uri.UserInfo.Split(':', 2);
+    if (credentials.Length != 2)
+        throw new InvalidOperationException("The PostgreSQL URL is missing credentials.");
+
+    return new NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.IsDefaultPort ? 5432 : uri.Port,
+        Database = uri.AbsolutePath.TrimStart('/'),
+        Username = Uri.UnescapeDataString(credentials[0]),
+        Password = Uri.UnescapeDataString(credentials[1]),
+        SslMode = SslMode.Prefer
+    }.ConnectionString;
+}
 
 public partial class Program { }

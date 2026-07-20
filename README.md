@@ -112,6 +112,24 @@ dotnet ef database update --project server/server.csproj
 Legacy SQLite files are intentionally ignored and are not required by the
 application. PostgreSQL is the only runtime database provider.
 
+## Always-on Render deployment
+
+The root `render.yaml` provisions an Ohio-region paid Starter web service and a
+paid Basic PostgreSQL database. The Docker image builds the React client and
+ASP.NET API together, serves both from one HTTPS origin, applies EF migrations
+at startup, and exposes `/health/ready` to Render.
+
+After merging the deployment configuration into GitHub:
+
+1. In Render, choose **New → Blueprint**.
+2. Connect `ToddJewellMyers/enigma` and select `render.yaml`.
+3. Review and approve the paid Starter and Basic resources.
+4. Wait for `/health/ready` to pass, then open the assigned `onrender.com` URL.
+
+Render generates the JWT secret and injects the private PostgreSQL connection
+URL. The database blocks public inbound connections. Add a custom domain later
+from the service settings; Render provisions and renews its TLS certificate.
+
 ## Production operations
 
 ### Monitoring
