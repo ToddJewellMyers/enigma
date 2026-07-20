@@ -19,16 +19,6 @@ function Column({ id, title, refreshVersion, onCardMoved }: ColumnProps) {
   const [error, setError] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
 
-  async function loadCards() {
-    try {
-      const data = await getCards(id);
-      setCards(data);
-      setError("");
-    } catch (requestError) {
-      setError(getErrorMessage(requestError, "Cards could not be loaded."));
-    }
-  }
-
   async function handleCreateCard() {
     if (!newCardTitle.trim()) return;
 
@@ -91,7 +81,17 @@ function Column({ id, title, refreshVersion, onCardMoved }: ColumnProps) {
   }
 
   useEffect(() => {
-    loadCards();
+    async function loadCards() {
+      try {
+        const data = await getCards(id);
+        setCards(data);
+        setError("");
+      } catch (requestError) {
+        setError(getErrorMessage(requestError, "Cards could not be loaded."));
+      }
+    }
+
+    void loadCards();
   }, [id, refreshVersion]);
 
   return (

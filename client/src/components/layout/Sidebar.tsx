@@ -22,21 +22,6 @@ function Sidebar({
     const [newWorkspaceName, setNewWorkspaceName] = useState("");
     const [error, setError] = useState("");
 
-    async function loadWorkspaces() {
-        try {
-            const data = await getWorkspaces();
-            setWorkspaces(data);
-            setError("");
-
-            // Automatically select the first workspace
-            if (!selectedWorkspace && data.length > 0) {
-                onSelectWorkspace(data[0]);
-            }
-        } catch (requestError) {
-            setError(getErrorMessage(requestError, "Workspaces could not be loaded."));
-        }
-    }
-
     async function handleCreateWorkspace() {
         if (!newWorkspaceName.trim()) return;
 
@@ -75,8 +60,22 @@ function Sidebar({
     }
 
     useEffect(() => {
-        loadWorkspaces();
-    }, []);
+        async function loadInitialWorkspaces() {
+            try {
+                const data = await getWorkspaces();
+                setWorkspaces(data);
+                setError("");
+
+                if (data.length > 0) {
+                    onSelectWorkspace(data[0]);
+                }
+            } catch (requestError) {
+                setError(getErrorMessage(requestError, "Workspaces could not be loaded."));
+            }
+        }
+
+        void loadInitialWorkspaces();
+    }, [onSelectWorkspace]);
 
     return (
         <aside id="workspace-sidebar" aria-label="Workspace navigation" className={`fixed inset-y-16 left-0 z-40 flex w-[min(20rem,85vw)] flex-col border-r border-slate-800 bg-slate-900 p-5 transition-transform lg:static lg:inset-auto lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
