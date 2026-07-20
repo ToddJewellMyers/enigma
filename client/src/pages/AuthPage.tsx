@@ -2,9 +2,12 @@ import { useState } from "react";
 import { login, register } from "../services/authService";
 import { getErrorMessage } from "../api/errorMessage";
 
-type AuthPageProps = { onAuthenticated: (token: string, email: string) => void };
+type AuthPageProps = {
+    onAuthenticated: (token: string, email: string) => void;
+    onOpenTerminal?: () => void;
+};
 
-function AuthPage({ onAuthenticated }: AuthPageProps) {
+function AuthPage({ onAuthenticated, onOpenTerminal }: AuthPageProps) {
     const [isRegistering, setIsRegistering] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -42,6 +45,9 @@ function AuthPage({ onAuthenticated }: AuthPageProps) {
                 {error && <p id="auth-error" role="alert" className="mb-4 text-sm text-red-400">{error}</p>}
                 <button disabled={isSubmitting} className="w-full rounded-lg bg-blue-600 px-4 py-2 font-bold hover:bg-blue-700 disabled:opacity-50">{isSubmitting ? "Please wait…" : isRegistering ? "Register" : "Log in"}</button>
                 <button type="button" onClick={() => { setIsRegistering(!isRegistering); setError(""); }} className="mt-4 w-full text-sm text-slate-400 hover:text-white">{isRegistering ? "Already have an account? Log in" : "Need an account? Register"}</button>
+                {onOpenTerminal && (
+                    <button type="button" onClick={onOpenTerminal} className="mt-3 w-full rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-blue-500 hover:text-white">Open local terminal</button>
+                )}
             </form>
         </main>
     );

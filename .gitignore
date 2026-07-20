@@ -49,3 +49,9 @@ TestResults/
 /server/src/
 /server/package.json
 /server/package-lock.json
+
+# Desktop packaging output
+/desktop/dist/
+
+# Intermediate logo-generation source
+/client/public/brand/*-chroma.png

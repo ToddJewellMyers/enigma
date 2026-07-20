@@ -25,6 +25,15 @@ public class WorkflowTests : IClassFixture<KanbanApiFactory>
     }
 
     [Fact]
+    public async Task Health_endpoints_report_live_and_ready()
+    {
+        using var client = _factory.CreateClient();
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health/live")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health/ready")).StatusCode);
+    }
+
+    [Fact]
     public async Task Registration_creates_clean_production_onboarding_data()
     {
         using var client = await CreateAuthenticatedClient();

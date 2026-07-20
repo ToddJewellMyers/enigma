@@ -74,6 +74,33 @@ npm run build
 The backend tests use an isolated in-memory database and never modify PostgreSQL
 data.
 
+## macOS desktop app and terminal
+
+The desktop version wraps the same Enigma interface in Electron and adds a real
+local shell powered by a native PTY. Terminal access is exposed only through the
+desktop preload bridge; the browser build cannot start local processes.
+
+With the API and frontend development server already running:
+
+```bash
+cd desktop
+npm install
+npm run dev
+```
+
+Use the **Boards** and **Terminal** controls in the header to switch workspaces.
+The terminal starts the user's login shell in their home directory.
+
+Create an unsigned local macOS package with:
+
+```bash
+cd desktop
+npm run dist
+```
+
+Public distribution requires an Apple Developer ID certificate and notarization
+credentials. Do not distribute an unsigned build as a trusted production app.
+
 ## Production database
 
 Apply migrations as a release step before starting a newly deployed API:
@@ -84,3 +111,52 @@ dotnet ef database update --project server/server.csproj
 
 Legacy SQLite files are intentionally ignored and are not required by the
 application. PostgreSQL is the only runtime database provider.
+
+## Production operations
+
+### Monitoring
+
+Configure the hosting provider to poll these unauthenticated endpoints:
+
+- `GET /health/live` confirms the API process is responding.
+- `GET /health/ready` confirms the API can connect to PostgreSQL.
+
+Use `/health/ready` for deployment readiness and alerts. A database outage
+returns HTTP 503 without exposing connection details.
+
+### HTTPS
+
+The production API enables HSTS and redirects direct HTTP requests to HTTPS.
+Set `Proxy__ForwardedHeadersEnabled=true` when TLS terminates at a trusted
+hosting proxy so ASP.NET honors the proxy's forwarded protocol. Keep production
+CORS origins HTTPS-only. The hosting provider must provision and renew the TLS
+certificate for both the frontend and API domains.
+
+### Error logging
+
+Production logs are emitted as structured JSON to standard output for ingestion
+by the hosting provider. Unhandled exceptions include the HTTP method, request
+path, and trace ID. API problem responses contain the same `traceId` for support
+correlation, while exception details remain server-side.
+
+### Database backups
+
+Prefer the PostgreSQL provider's encrypted, automated backups and point-in-time
+recovery. The repository also includes a portable logical backup job:
+
+```bash
+export DATABASE_URL='postgresql://user:password@host:5432/enigma_kanban?sslmode=require'
+export BACKUP_DIR='/secure/offsite/location'
+export BACKUP_RETENTION_DAYS=14
+./scripts/backup-postgres.sh
+```
+
+The script creates a restrictive custom-format `pg_dump`, validates it with
+`pg_restore --list`, and removes dumps older than the retention period. Schedule
+it daily in the hosting provider and store `BACKUP_DIR` on durable, encrypted
+offsite storage—not the API container filesystem. Test a restore regularly:
+
+```bash
+createdb enigma_restore_test
+pg_restore --no-owner --no-privileges --dbname=enigma_restore_test backup.dump
+```

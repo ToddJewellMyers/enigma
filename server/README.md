@@ -58,4 +58,13 @@ Cors__AllowedOrigins__1=https://www.kanban.example.com
 
 Use the origin only: scheme, hostname, and optional port. Do not include a path, trailing slash, or wildcard. Use HTTPS in production.
 
+## Operations
+
+- Liveness: `GET /health/live`
+- Database readiness: `GET /health/ready`
+- HTTPS and HSTS: enabled outside Development and Testing
+- Reverse proxy support: set `Proxy__ForwardedHeadersEnabled=true`
+- Error logs: structured JSON on standard output in Production
+- Logical backups: run `scripts/backup-postgres.sh` from the repository root
+
 `appsettings.Production.example.json` shows the equivalent JSON structure. Do not copy development JWT keys into production configuration.
