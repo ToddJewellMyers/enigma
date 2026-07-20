@@ -21,26 +21,6 @@ function Board({ selectedWorkspace }: BoardProps) {
     const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
     const [error, setError] = useState("");
 
-    async function loadBoards() {
-        if (!selectedWorkspace) return;
-        try {
-        const data = await getBoards(selectedWorkspace.id);
-        setBoards(data);
-        setError("");
-
-        if (data.length > 0) {
-            const nextActiveBoard = data.find((board) => board.id === activeBoardId) ?? data[0];
-            setActiveBoardId(nextActiveBoard.id);
-            await loadColumns(nextActiveBoard.id);
-        } else {
-            setActiveBoardId(null);
-            setColumns([]);
-        }
-        } catch (requestError) {
-            setError(getErrorMessage(requestError, "Boards could not be loaded."));
-        }
-    }
-
     async function loadColumns(boardId: string) {
         try {
             const data = await getColumns(boardId);
@@ -102,8 +82,28 @@ function Board({ selectedWorkspace }: BoardProps) {
     }
 
     useEffect(() => {
-        setActiveBoardId(null);
-        loadBoards();
+        async function loadWorkspaceBoards() {
+            if (!selectedWorkspace) {
+                setBoards([]);
+                setActiveBoardId(null);
+                setColumns([]);
+                return;
+            }
+
+            try {
+                const data = await getBoards(selectedWorkspace.id);
+                setBoards(data);
+                setError("");
+
+                const firstBoard = data[0];
+                setActiveBoardId(firstBoard?.id ?? null);
+                setColumns(firstBoard ? await getColumns(firstBoard.id) : []);
+            } catch (requestError) {
+                setError(getErrorMessage(requestError, "Boards could not be loaded."));
+            }
+        }
+
+        void loadWorkspaceBoards();
     }, [selectedWorkspace]);
 
     if (!selectedWorkspace) {
