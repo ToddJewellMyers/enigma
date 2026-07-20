@@ -3,11 +3,10 @@ type HeaderProps = {
     isSidebarOpen: boolean;
     onMenuClick: () => void;
     onLogout: () => void;
-    activeView?: "board" | "terminal";
-    onViewChange?: (view: "board" | "terminal") => void;
+    onOpenTerminal?: () => void;
 };
 
-function Header({ email, isSidebarOpen, onMenuClick, onLogout, activeView = "board", onViewChange }: HeaderProps) {
+function Header({ email, isSidebarOpen, onMenuClick, onLogout, onOpenTerminal }: HeaderProps) {
     return (
         <header className="z-40 flex h-16 shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900 px-4 sm:px-6">
             <div className="flex items-center gap-3">
@@ -27,11 +26,8 @@ function Header({ email, isSidebarOpen, onMenuClick, onLogout, activeView = "boa
             </div>
 
             <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-                {onViewChange && (
-                    <div className="hidden rounded-lg bg-slate-950 p-1 sm:flex" aria-label="Application view">
-                        <button type="button" aria-pressed={activeView === "board"} onClick={() => onViewChange("board")} className={`rounded px-3 py-1.5 text-sm ${activeView === "board" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white"}`}>Boards</button>
-                        <button type="button" aria-pressed={activeView === "terminal"} onClick={() => onViewChange("terminal")} className={`rounded px-3 py-1.5 text-sm ${activeView === "terminal" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white"}`}>Terminal</button>
-                    </div>
+                {onOpenTerminal && (
+                    <button type="button" onClick={onOpenTerminal} className="hidden rounded-lg bg-slate-950 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 sm:block">Terminal</button>
                 )}
                 <input
                     placeholder="Search..."

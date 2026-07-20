@@ -4,7 +4,7 @@ Enigma has two macOS desktop targets built from the same hosted Kanban applicati
 
 | Edition | Distribution | Local terminal | Sandbox |
 | --- | --- | --- | --- |
-| Enigma Community | GitHub Releases / direct download | Yes | Electron renderer sandbox disabled because of `node-pty` |
+| Enigma Community | GitHub Releases / direct download | Yes | Electron renderer sandbox enabled; shell runs in the main process |
 | Enigma Mac App Store | Mac App Store | No | Apple App Sandbox and Electron renderer sandbox enabled |
 
 Both editions load `https://enigma-kanban.onrender.com/` by default. Development builds can override this with `ENIGMA_DEV_URL`.
@@ -23,7 +23,23 @@ The development script sets `ENIGMA_DEV_URL=http://localhost:5173`. Board operat
 
 ## Community edition
 
-The Community edition exposes a narrow terminal bridge backed by xterm.js and `node-pty`. It allows only terminal create, input, resize, close, output, and exit operations. Sessions are bound to their owning renderer and closed with the window.
+The Community edition opens its terminal in a separate trusted local window backed by xterm.js and `node-pty`. The remotely hosted Kanban window can request only that this local window be opened; it never receives shell input, output, process identifiers, or terminal session controls.
+
+Terminal features include:
+
+- Multiple named terminal tabs
+- Project-folder selection and one-click terminal creation in that folder
+- Restored tab names, folders, settings, and command history after reopening
+- Reviewed shortcuts for Git status, development servers, tests, and builds
+- Output search with next and previous navigation
+- Clear output and searchable command history
+- Font size, font family, cursor, theme, and scrollback settings
+- Directory, shell, PID, and running/exited status information
+- `Command/Ctrl+T` for a new tab, `Command/Ctrl+F` for search, and `Command/Ctrl+W` to close a tab
+- Keyboard focus indicators, accessible labels, a high-contrast theme, and reduced-motion support
+- Confirmation before toolbar/history commands run and before active shells close
+
+The **Explain error (AI)** control is deliberately disabled. No API key is stored and no terminal output is transmitted. It marks the future integration boundary for an opt-in assistant that must present proposed commands for review before execution.
 
 Create an unsigned development package:
 
@@ -88,6 +104,10 @@ The resulting `.pkg` is placed in `desktop/dist/mas` and uploaded as a private w
 - New HTTPS links open in the system browser.
 - Node integration is disabled in both editions.
 - Context isolation is enabled in both editions.
+- Renderer sandboxing is enabled in both editions.
+- Browser permission requests are denied by default.
+- The hosted window can only request that the trusted local terminal window open.
+- Terminal IPC is available only inside the trusted local terminal window.
 - The App Store edition has no preload bridge and runs sandboxed.
 - Only the Community edition contains native terminal access.
 

@@ -6,19 +6,24 @@
   "main": "main.cjs",
   "private": true,
   "scripts": {
-    "dev": "ENIGMA_DEV_URL=http://localhost:5173 electron .",
+    "dev": "npm run build:terminal && ENIGMA_DEV_URL=http://localhost:5173 electron .",
+    "build:terminal": "esbuild src/terminal-renderer.js --bundle --format=iife --platform=browser --outfile=dist-renderer/terminal.js",
     "dist": "npm run dist:community",
-    "dist:community": "electron-builder --config electron-builder.community.yml --mac",
-    "dist:community:unsigned": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --config electron-builder.community.yml --mac",
+    "dist:community": "npm run build:terminal && electron-builder --config electron-builder.community.yml --mac",
+    "dist:community:unsigned": "npm run build:terminal && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --config electron-builder.community.yml --mac",
     "dist:mas": "electron-builder --config electron-builder.mas.yml --mac mas",
     "verify:mas-structure": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --config electron-builder.mas.yml --mac mas --dir",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-search": "^0.16.0",
+    "@xterm/xterm": "^6.0.0",
     "node-pty": "^1.1.0"
   },
   "devDependencies": {
     "electron": "^39.2.7",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.25.12"
   }
 }

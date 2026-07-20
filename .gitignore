@@ -52,6 +52,7 @@ TestResults/
 
 # Desktop packaging output
 /desktop/dist/
+/desktop/dist-renderer/
 
 # Intermediate logo-generation source
 /client/public/brand/*-chroma.png

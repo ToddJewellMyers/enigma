@@ -6,7 +6,11 @@ directories:
   buildResources: build
 files:
   - main.cjs
-  - preload.cjs
+  - desktop-preload.cjs
+  - terminal-preload.cjs
+  - terminal.html
+  - terminal.css
+  - dist-renderer/**
   - package.json
 asarUnpack:
   - node_modules/node-pty/**

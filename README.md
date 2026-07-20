@@ -18,6 +18,7 @@ Production application: [https://enigma-kanban.onrender.com](https://enigma-kanb
 - Provide an onboarding workspace and starter board for every new account.
 - Run as a hosted web application or an optional Electron desktop application.
 - Open a native local shell from the desktop application.
+- Use multiple terminal tabs, project folders, reviewed shortcuts, output search, persistent settings, and session restoration in the Community edition.
 
 Enigma currently provides private, account-scoped project management. Real-time multi-user editing, workspace invitations, comments, notifications, file attachments, and role-based team permissions are not yet implemented.
 
