@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: enigma-kanban
+    runtime: docker
+    plan: starter
+    region: ohio
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    autoDeployTrigger: commit
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Proxy__ForwardedHeadersEnabled
+        value: "true"
+      - key: Database__ApplyMigrationsOnStartup
+        value: "true"
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: enigma-postgres
+          property: connectionString
+      - key: Jwt__Key
+        generateValue: true
+
+databases:
+  - name: enigma-postgres
+    plan: basic-256mb
+    region: ohio
+    postgresMajorVersion: "18"
+    databaseName: enigma
+    user: enigma
+    ipAllowList: []

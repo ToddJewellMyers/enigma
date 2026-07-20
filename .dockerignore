@@ -1,0 +1,13 @@
+.git
+.github
+**/bin
+**/obj
+**/node_modules
+**/dist
+desktop
+server.Tests
+server/LegacySqliteMigrations
+server/*.db*
+*.log
+.env*
+!.env.example
