@@ -5,6 +5,7 @@ const { randomUUID } = require("node:crypto");
 const pty = require("node-pty");
 
 const sessions = new Map();
+const productionUrl = "https://enigma-kanban.onrender.com/";
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -22,12 +23,12 @@ function createWindow() {
     }
   });
 
-  const devUrl = process.env.ENIGMA_DEV_URL;
-  if (devUrl) {
-    window.loadURL(devUrl);
-  } else {
-    window.loadFile(path.join(process.resourcesPath, "client", "index.html"));
-  }
+  const appUrl = process.env.ENIGMA_DEV_URL || productionUrl;
+  window.loadURL(appUrl);
+
+  window.webContents.on("will-navigate", (event, url) => {
+    if (new URL(url).origin !== new URL(appUrl).origin) event.preventDefault();
+  });
 
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("https://")) shell.openExternal(url);

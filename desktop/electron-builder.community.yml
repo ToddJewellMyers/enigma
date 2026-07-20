@@ -1,0 +1,22 @@
+appId: com.enigma.kanban
+productName: Enigma Community
+copyright: Copyright © 2026 Todd Jewell Myers
+directories:
+  output: dist/community
+  buildResources: build
+files:
+  - main.cjs
+  - preload.cjs
+  - package.json
+asarUnpack:
+  - node_modules/node-pty/**
+mac:
+  category: public.app-category.productivity
+  target:
+    - dmg
+    - zip
+  icon: build/icon.png
+  hardenedRuntime: true
+  gatekeeperAssess: false
+dmg:
+  title: Enigma Community ${version}

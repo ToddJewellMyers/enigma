@@ -309,9 +309,14 @@ To create the deployment:
 
 Render terminates HTTPS and injects its public hostname into the API's allowed same-origin configuration. Add a custom domain from the Render service settings when one is available; Render can then provision its TLS certificate.
 
-## Desktop application and local terminal
+## Desktop editions
 
-The optional Electron application wraps Enigma and exposes a real local login shell through xterm.js and `node-pty`. The terminal runs on the user's computer; the hosted browser application cannot and should not start local processes.
+Enigma has two macOS desktop targets:
+
+- **Enigma Community** is intended for open-source distribution through GitHub Releases. It includes a real local login shell through xterm.js and `node-pty`.
+- **Enigma for the Mac App Store** excludes the terminal, enables Apple App Sandbox and Electron renderer sandboxing, and requests only outbound network access.
+
+Both editions load the production Enigma service by default. The terminal runs only on the user's computer and is never exposed by the hosted browser or App Store edition.
 
 Install desktop dependencies:
 
@@ -327,16 +332,23 @@ cd desktop
 npm run dev
 ```
 
-Build an unsigned local macOS package:
+Build unsigned Community DMG and ZIP packages:
 
 ```bash
 cd desktop
-npm run dist
+npm run dist:community:unsigned
 ```
 
-Generated DMG and ZIP files appear under `desktop/dist`. Public macOS distribution requires an Apple Developer ID certificate, hardened runtime configuration, signing, and notarization.
+Verify the Mac App Store package structure up to Apple's required signing step:
 
-Desktop security boundaries include disabled Node integration, enabled context isolation, ownership checks for terminal sessions, bounded terminal input and dimensions, and a narrow preload bridge. Because `node-pty` requires native access, Electron's renderer sandbox is currently disabled; this should be reconsidered before broad desktop distribution.
+```bash
+cd desktop
+npm run verify:mas-structure
+```
+
+Community artifacts appear under `desktop/dist/community`; App Store artifacts appear under `desktop/dist/mas`. Public direct distribution still requires Developer ID signing and notarization. App Store submission requires Apple Distribution signing, a provisioning profile, an App Store Connect record, listing assets, and review.
+
+See [`desktop/README.md`](desktop/README.md) for build instructions and [`desktop/APP_STORE_CHECKLIST.md`](desktop/APP_STORE_CHECKLIST.md) for the submission checklist.
 
 ## Security
 
@@ -354,7 +366,7 @@ Enigma currently includes:
 - PostgreSQL isolated from public inbound connections on Render
 - Secrets supplied through environment variables instead of source control
 
-For a commercial launch, also establish a vulnerability-update routine, privacy policy, terms of service, incident-response process, support contact, data-retention policy, and independent security review.
+For a commercial launch, also establish a vulnerability-update routine, terms of service, incident-response process, dedicated support contact, finalized data-retention policy, and independent security review. The repository includes the initial [`PRIVACY.md`](PRIVACY.md) notice, which must be published at a stable public URL and reviewed whenever data handling changes.
 
 ## Monitoring and health checks
 
