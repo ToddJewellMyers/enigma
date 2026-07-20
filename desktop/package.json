@@ -1,42 +1,29 @@
 {
   "name": "enigma-desktop",
   "version": "0.1.0",
-  "description": "Enigma Kanban desktop app with an integrated terminal",
+  "description": "Desktop editions of the Enigma Kanban application",
+  "author": "Todd Jewell Myers",
   "main": "main.cjs",
   "private": true,
   "scripts": {
-    "dev": "ENIGMA_DEV_URL=http://localhost:5173 electron .",
-    "build:client": "npm --prefix ../client run build",
-    "dist": "npm run build:client && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
+    "dev": "npm run build:terminal && ENIGMA_DEV_URL=http://localhost:5173 electron .",
+    "build:terminal": "esbuild src/terminal-renderer.js --bundle --format=iife --platform=browser --outfile=dist-renderer/terminal.js",
+    "dist": "npm run dist:community",
+    "dist:community": "npm run build:terminal && electron-builder --config electron-builder.community.yml --mac",
+    "dist:community:unsigned": "npm run build:terminal && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --config electron-builder.community.yml --mac",
+    "dist:mas": "electron-builder --config electron-builder.mas.yml --mac mas",
+    "verify:mas-structure": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --config electron-builder.mas.yml --mac mas --dir",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-search": "^0.16.0",
+    "@xterm/xterm": "^6.0.0",
     "node-pty": "^1.1.0"
   },
   "devDependencies": {
     "electron": "^39.2.7",
-    "electron-builder": "^26.0.12"
-  },
-  "build": {
-    "appId": "com.enigma.kanban",
-    "productName": "Enigma",
-    "asarUnpack": [
-      "node_modules/node-pty/**"
-    ],
-    "files": [
-      "main.cjs",
-      "preload.cjs",
-      "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "../client/dist",
-        "to": "client"
-      }
-    ],
-    "mac": {
-      "category": "public.app-category.productivity",
-      "target": ["dmg", "zip"]
-    }
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.25.12"
   }
 }

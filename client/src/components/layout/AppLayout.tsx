@@ -9,19 +9,10 @@ type AppLayoutProps = {
     onSelectWorkspace: (workspace: Workspace | null) => void;
     email: string;
     onLogout: () => void;
-    activeView: "board" | "terminal";
-    onViewChange?: (view: "board" | "terminal") => void;
+    onOpenTerminal?: () => void;
 };
 
-function AppLayout({
-    children,
-    selectedWorkspace,
-    onSelectWorkspace,
-    email,
-    onLogout,
-    activeView,
-    onViewChange,
-}: AppLayoutProps) {
+function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLogout, onOpenTerminal }: AppLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
@@ -32,8 +23,7 @@ function AppLayout({
                 isSidebarOpen={isSidebarOpen}
                 onMenuClick={() => setIsSidebarOpen((isOpen) => !isOpen)}
                 onLogout={onLogout}
-                activeView={activeView}
-                onViewChange={onViewChange}
+                onOpenTerminal={onOpenTerminal}
             />
 
             <div className="flex flex-1 overflow-hidden">
@@ -45,17 +35,14 @@ function AppLayout({
                         onClick={() => setIsSidebarOpen(false)}
                     />
                 )}
-                {activeView === "board" && (
-                    <Sidebar
-                        selectedWorkspace={selectedWorkspace}
-                        isOpen={isSidebarOpen}
-                        onSelectWorkspace={(workspace) => {
-                            onSelectWorkspace(workspace);
-                            setIsSidebarOpen(false);
-                        }}
-                    />
-                )}
-
+                <Sidebar
+                    selectedWorkspace={selectedWorkspace}
+                    isOpen={isSidebarOpen}
+                    onSelectWorkspace={(workspace) => {
+                        onSelectWorkspace(workspace);
+                        setIsSidebarOpen(false);
+                    }}
+                />
                 <main id="main-content" tabIndex={-1} className="min-h-0 min-w-0 flex-1 overflow-auto p-4 sm:p-6">{children}</main>
             </div>
         </div>

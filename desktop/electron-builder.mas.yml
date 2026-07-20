@@ -1,0 +1,26 @@
+appId: com.enigma.kanban.mas
+productName: Enigma
+copyright: Copyright © 2026 Todd Jewell Myers
+directories:
+  output: dist/mas
+  buildResources: build
+extraMetadata:
+  main: main.mas.cjs
+npmRebuild: false
+files:
+  - main.mas.cjs
+  - package.json
+  - "!node_modules{,/**/*}"
+mac:
+  category: public.app-category.productivity
+  icon: build/icon.png
+  target:
+    - mas
+  type: distribution
+  hardenedRuntime: false
+  entitlements: build/entitlements.mas.plist
+  entitlementsInherit: build/entitlements.mas.inherit.plist
+  provisioningProfile: ${env.ENIGMA_MAS_PROVISIONING_PROFILE}
+mas:
+  entitlements: build/entitlements.mas.plist
+  entitlementsInherit: build/entitlements.mas.inherit.plist

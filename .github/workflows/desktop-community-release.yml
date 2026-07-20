@@ -1,0 +1,41 @@
+name: Desktop Community Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm ci
+      - name: Build unsigned Community packages
+        working-directory: desktop
+        run: npm run dist:community:unsigned
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: enigma-community-macos
+          path: |
+            desktop/dist/community/*.dmg
+            desktop/dist/community/*.zip
+            desktop/dist/community/*.blockmap
+          if-no-files-found: error
+      - name: Attach packages to tagged GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" desktop/dist/community/*.dmg desktop/dist/community/*.zip --generate-notes --verify-tag
