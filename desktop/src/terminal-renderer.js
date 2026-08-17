@@ -9,7 +9,7 @@ const storageKeys = {
   history: "enigma_terminal_history_v1"
 };
 const themes = {
-  enigma: { background: "#020617", foreground: "#e2e8f0", cursor: "#65ff00", selectionBackground: "#1d4ed880" },
+  enigma: { background: "#1b100c", foreground: "#f5e7d8", cursor: "#f6c453", selectionBackground: "#7a3e2080" },
   midnight: { background: "#030712", foreground: "#dbeafe", cursor: "#60a5fa", selectionBackground: "#1e40af88" },
   highContrast: { background: "#000000", foreground: "#ffffff", cursor: "#ffff00", selectionBackground: "#ffffff55" }
 };
@@ -33,7 +33,7 @@ let commandHistory = readJson(storageKeys.history, []);
 document.querySelector("#app").innerHTML = `
   <main class="app">
     <header class="titlebar">
-      <h1>ENIGMA TERMINAL</h1>
+      <h1>SWEET MAHOGANY BOARDS TERMINAL</h1>
       <div class="titlebar-actions">
         <button id="choose-folder" class="button" type="button">Choose folder</button>
         <button id="new-tab" class="button primary" type="button">+ New tab</button>
@@ -278,7 +278,7 @@ function showSettings() {
     <label class="field">Font size<input id="setting-font-size" type="number" min="10" max="28" value="${settings.fontSize}"></label>
     <label class="field">Font family<input id="setting-font-family" value="${escapeAttribute(settings.fontFamily)}"></label>
     <label class="field">Cursor<select id="setting-cursor"><option value="block">Block</option><option value="bar">Bar</option><option value="underline">Underline</option></select></label>
-    <label class="field">Theme<select id="setting-theme"><option value="enigma">Enigma</option><option value="midnight">Midnight</option><option value="highContrast">High contrast</option></select></label>
+    <label class="field">Theme<select id="setting-theme"><option value="enigma">Sweet Mahogany</option><option value="midnight">Midnight</option><option value="highContrast">High contrast</option></select></label>
     <label class="field">Scrollback lines<input id="setting-scrollback" type="number" min="1000" max="100000" step="1000" value="${settings.scrollback}"></label>`, () => {
       settings = {
         fontSize: clampNumber(document.querySelector("#setting-font-size").value, 10, 28, 14),

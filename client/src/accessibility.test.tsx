@@ -22,6 +22,7 @@ describe("accessibility", () => {
                 isSidebarOpen={false}
                 onMenuClick={() => undefined}
                 onLogout={() => undefined}
+                onOpenAccount={() => undefined}
             />
         );
 

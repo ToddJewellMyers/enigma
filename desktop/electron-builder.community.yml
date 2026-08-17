@@ -1,5 +1,5 @@
-appId: com.enigma.kanban
-productName: Enigma Community
+appId: com.sweetmahogany.boards
+productName: Sweet Mahogany Boards Community
 copyright: Copyright © 2026 Todd Jewell Myers
 directories:
   output: dist/community
@@ -23,4 +23,4 @@ mac:
   hardenedRuntime: true
   gatekeeperAssess: false
 dmg:
-  title: Enigma Community ${version}
+  title: Sweet Mahogany Boards Community ${version}

@@ -3,10 +3,10 @@
 ## Apple account setup
 
 - [ ] Enroll in the Apple Developer Program.
-- [ ] Register the App ID `com.enigma.kanban.mas`.
+- [ ] Register the App ID `com.sweetmahogany.boards.mas`.
 - [ ] Create an Apple Distribution certificate.
 - [ ] Create a Mac App Store distribution provisioning profile.
-- [ ] Create the Enigma macOS app record in App Store Connect.
+- [ ] Create the Sweet Mahogany Boards macOS app record in App Store Connect.
 
 ## Repository and build
 
@@ -45,4 +45,4 @@
 
 ## Review risk to address
 
-The App Store edition is a native Electron window around the hosted Enigma service. Apple may determine that it does not provide enough Mac-specific value under its minimum-functionality guidelines. Before submission, consider adding native menu commands, keyboard shortcuts, notifications, dock integrations, offline behavior, or another meaningful platform feature that remains compatible with App Sandbox.
+The App Store edition is a native Electron window around the hosted Sweet Mahogany Boards service. Apple may determine that it does not provide enough Mac-specific value under its minimum-functionality guidelines. Before submission, consider adding native menu commands, keyboard shortcuts, notifications, dock integrations, offline behavior, or another meaningful platform feature that remains compatible with App Sandbox.

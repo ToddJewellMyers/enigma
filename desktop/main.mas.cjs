@@ -7,7 +7,7 @@ function createWindow() {
     height: 900,
     minWidth: 760,
     minHeight: 520,
-    title: "Enigma",
+    title: "Sweet Mahogany Boards",
     backgroundColor: "#020617",
     webPreferences: {
       contextIsolation: true,
@@ -16,7 +16,7 @@ function createWindow() {
     }
   });
 
-  const appUrl = process.env.ENIGMA_DEV_URL || productionUrl;
+  const appUrl = process.env.SWEET_MAHOGANY_DEV_URL || process.env.ENIGMA_DEV_URL || productionUrl;
   window.loadURL(appUrl);
 
   window.webContents.on("will-navigate", (event, url) => {

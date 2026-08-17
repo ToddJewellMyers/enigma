@@ -22,6 +22,22 @@ services:
           property: connectionString
       - key: Jwt__Key
         generateValue: true
+      - key: PublicAppUrl
+        value: https://enigma-kanban.onrender.com
+      - key: Email__FromName
+        value: Sweet Mahogany Boards
+      - key: Email__FromAddress
+        sync: false
+      - key: Email__Smtp__Host
+        sync: false
+      - key: Email__Smtp__Port
+        value: "587"
+      - key: Email__Smtp__Username
+        sync: false
+      - key: Email__Smtp__Password
+        sync: false
+      - key: Email__Smtp__EnableSsl
+        value: "true"
 
 databases:
   - name: enigma-postgres

@@ -16,13 +16,13 @@ let terminalWindow;
 let isQuitting = false;
 
 function createMainWindow() {
-  const appUrl = process.env.ENIGMA_DEV_URL || productionUrl;
+  const appUrl = process.env.SWEET_MAHOGANY_DEV_URL || process.env.ENIGMA_DEV_URL || productionUrl;
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 900,
     minWidth: 760,
     minHeight: 520,
-    title: "Enigma Community",
+    title: "Sweet Mahogany Boards Community",
     backgroundColor: "#020617",
     webPreferences: {
       preload: path.join(__dirname, "desktop-preload.cjs"),
@@ -43,7 +43,7 @@ function createMainWindow() {
 function installApplicationMenu() {
   const menu = Menu.buildFromTemplate([
     {
-      label: "Enigma Community",
+      label: "Sweet Mahogany Boards Community",
       submenu: [
         { role: "about" },
         { type: "separator" },
@@ -59,7 +59,7 @@ function installApplicationMenu() {
     { role: "editMenu" },
     { role: "viewMenu" },
     { role: "windowMenu" },
-    { role: "help", submenu: [{ label: "Enigma on GitHub", click: () => shell.openExternal("https://github.com/ToddJewellMyers/enigma") }] }
+    { role: "help", submenu: [{ label: "Sweet Mahogany Boards on GitHub", click: () => shell.openExternal("https://github.com/ToddJewellMyers/enigma") }] }
   ]);
   Menu.setApplicationMenu(menu);
 }
@@ -76,7 +76,7 @@ function openTerminalWindow() {
     height: 820,
     minWidth: 760,
     minHeight: 520,
-    title: "Enigma Terminal",
+    title: "Sweet Mahogany Boards Terminal",
     backgroundColor: "#020617",
     webPreferences: {
       preload: path.join(__dirname, "terminal-preload.cjs"),

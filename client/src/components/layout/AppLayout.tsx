@@ -9,10 +9,11 @@ type AppLayoutProps = {
     onSelectWorkspace: (workspace: Workspace | null) => void;
     email: string;
     onLogout: () => void;
+    onOpenAccount: () => void;
     onOpenTerminal?: () => void;
 };
 
-function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLogout, onOpenTerminal }: AppLayoutProps) {
+function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLogout, onOpenAccount, onOpenTerminal }: AppLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
@@ -23,6 +24,7 @@ function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLo
                 isSidebarOpen={isSidebarOpen}
                 onMenuClick={() => setIsSidebarOpen((isOpen) => !isOpen)}
                 onLogout={onLogout}
+                onOpenAccount={onOpenAccount}
                 onOpenTerminal={onOpenTerminal}
             />
 

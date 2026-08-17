@@ -1,6 +1,6 @@
-# Enigma Kanban client
+# Sweet Mahogany Boards Kanban client
 
-React, TypeScript, Vite, and Tailwind frontend for Enigma Kanban.
+React, TypeScript, Vite, and Tailwind frontend for Sweet Mahogany Boards Kanban.
 
 ## API configuration
 

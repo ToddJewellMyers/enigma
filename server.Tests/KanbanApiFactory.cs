@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using server.Data;
+using server.Email;
 
 namespace server.Tests;
 
 public class KanbanApiFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = $"kanban-tests-{Guid.NewGuid()}";
+    public TestEmailSender EmailSender { get; } = new();
 
     static KanbanApiFactory()
     {
@@ -31,6 +33,7 @@ public class KanbanApiFactory : WebApplicationFactory<Program>
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(_databaseName)
                     .UseInternalServiceProvider(inMemoryProvider));
+            services.AddSingleton<IEmailSender>(EmailSender);
         });
     }
 }

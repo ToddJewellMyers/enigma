@@ -1,5 +1,5 @@
-appId: com.enigma.kanban.mas
-productName: Enigma
+appId: com.sweetmahogany.boards.mas
+productName: Sweet Mahogany Boards
 copyright: Copyright © 2026 Todd Jewell Myers
 directories:
   output: dist/mas
@@ -20,7 +20,7 @@ mac:
   hardenedRuntime: false
   entitlements: build/entitlements.mas.plist
   entitlementsInherit: build/entitlements.mas.inherit.plist
-  provisioningProfile: ${env.ENIGMA_MAS_PROVISIONING_PROFILE}
+  provisioningProfile: ${env.SWEET_MAHOGANY_MAS_PROVISIONING_PROFILE}
 mas:
   entitlements: build/entitlements.mas.plist
   entitlementsInherit: build/entitlements.mas.inherit.plist
