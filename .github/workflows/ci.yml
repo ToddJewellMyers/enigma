@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm run lint
+      - run: npm test -- --run
+      - run: npm run build
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore server.Tests/server.Tests.csproj
+      - run: dotnet tool restore
+      - run: dotnet test server.Tests/server.Tests.csproj --configuration Release --no-restore
+      - name: Verify idempotent migration script
+        env:
+          ConnectionStrings__DefaultConnection: Host=localhost;Database=structure_check;Username=postgres;Password=postgres
+        run: dotnet tool run dotnet-ef migrations script --project server/server.csproj --configuration Release --no-build --idempotent --output /tmp/migrations.sql
+
+  browser-workflow:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: sweet_mahogany_e2e
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mailpit:
+        image: axllent/mailpit:v1.30.0
+        ports: ["1025:1025", "8025:8025"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: npm ci
+        working-directory: client
+      - run: npx playwright install --with-deps chromium
+        working-directory: client
+      - run: dotnet restore server/server.csproj
+      - name: Start API
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://127.0.0.1:5099
+          Cors__AllowedOrigins__2: http://127.0.0.1:5173
+          ConnectionStrings__DefaultConnection: Host=127.0.0.1;Port=5432;Database=sweet_mahogany_e2e;Username=postgres;Password=postgres
+          Database__ApplyMigrationsOnStartup: "true"
+          PublicAppUrl: http://127.0.0.1:5173
+          Email__FromAddress: no-reply@sweetmahogany.test
+          Email__Smtp__Host: 127.0.0.1
+          Email__Smtp__Port: "1025"
+          Email__Smtp__EnableSsl: "false"
+        run: dotnet run --project server/server.csproj --no-restore --no-launch-profile > /tmp/smb-api.log 2>&1 &
+      - name: Start web client
+        env:
+          VITE_API_URL: http://127.0.0.1:5099/api
+        run: npm run dev -- --host 127.0.0.1 > /tmp/smb-client.log 2>&1 &
+        working-directory: client
+      - name: Wait for services
+        run: |
+          timeout 60 bash -c 'until curl --fail --silent http://127.0.0.1:5099/health/ready; do sleep 2; done'
+          timeout 60 bash -c 'until curl --fail --silent http://127.0.0.1:5173; do sleep 2; done'
+      - run: npm run test:e2e
+        working-directory: client
+        env:
+          E2E_BASE_URL: http://127.0.0.1:5173
+          MAILPIT_URL: http://127.0.0.1:8025
+      - name: Upload browser report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            client/playwright-report
+            client/test-results
+            /tmp/smb-api.log
+            /tmp/smb-client.log
+          if-no-files-found: ignore
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --tag sweet-mahogany-boards:${{ github.sha }} .

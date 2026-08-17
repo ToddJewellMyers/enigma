@@ -45,20 +45,24 @@ Kanban Board/
 │   ├── public/             Static icons and brand assets
 │   └── src/
 │       ├── api/            Axios setup and error handling
-│       ├── components/     Board, layout, UI, and terminal components
+│       ├── components/     Reusable board, account, layout, and UI components
+│       ├── features/       Board/card workflows, hooks, forms, and views
 │       ├── pages/          Authentication and dashboard pages
 │       ├── services/       Typed API calls
 │       └── types/          Client-side domain types
 ├── server/                 ASP.NET Core API
 │   ├── Auth/               Authenticated-user helpers
-│   ├── Controllers/        Authentication and Kanban endpoints
+│   ├── Contracts/          Validated API request and response records
+│   ├── Controllers/        Thin HTTP endpoints grouped by feature
 │   ├── Data/               EF Core context and onboarding seed
+│   ├── Email/              Account email interface and SMTP delivery
+│   ├── Extensions/         Service registration and HTTP pipeline setup
 │   ├── Migrations/         PostgreSQL schema migrations
-│   ├── Middleware/         Structured request error logging
+│   ├── Middleware/         Error logging and security headers
 │   ├── Models/             Database entities and validation
 │   └── Monitoring/         Database health check
-├── server.Tests/           API integration and workflow tests
-├── desktop/                Electron wrapper and terminal bridge
+├── server.Tests/           Focused health, account, and Kanban integration tests
+├── desktop/                Electron wrapper and modular terminal UI/runtime
 ├── scripts/                PostgreSQL backup tooling
 ├── Dockerfile              Production multi-stage image
 └── render.yaml             Render web service and database Blueprint
@@ -229,6 +233,11 @@ Authorization: Bearer <token>
 | --- | --- | --- |
 | `POST` | `/api/auth/register` | Create an account and receive a JWT |
 | `POST` | `/api/auth/login` | Authenticate and receive a JWT |
+| `POST` | `/api/auth/verify-email` | Verify a new account with an expiring token |
+| `POST` | `/api/auth/forgot-password` | Request a password-reset email |
+| `POST` | `/api/auth/reset-password` | Set a new password with an expiring token |
+| `GET` | `/api/account/export` | Download the authenticated account and Kanban data |
+| `DELETE` | `/api/account` | Permanently delete the authenticated account and data |
 | `GET` | `/api/workspaces` | List the current user's workspaces |
 | `POST` | `/api/workspaces` | Create a workspace |
 | `DELETE` | `/api/workspaces/{workspaceId}` | Delete a workspace and descendants |
@@ -243,7 +252,7 @@ Authorization: Bearer <token>
 | `PUT` | `/api/cards/{cardId}/move` | Move or reorder a card |
 | `DELETE` | `/api/cards/{cardId}` | Delete a card |
 | `GET` | `/health/live` | Confirm the API process is responding |
-| `GET` | `/health/ready` | Confirm the API can reach PostgreSQL |
+| `GET` | `/health/ready` | Confirm PostgreSQL and account-email configuration are ready |
 
 Authentication endpoints are limited to ten requests per minute per client IP. Validation errors use standard ASP.NET problem responses where applicable, and production exception details are not returned to clients.
 
@@ -272,11 +281,14 @@ cd client
 npm run lint
 npm test
 npm run build
+npx playwright test --list
 ```
 
 The API integration suite covers health, authentication, onboarding data, workspace lifecycle, board lifecycle, ordered columns, card creation, editing, movement, and deletion. It uses an isolated in-memory database and never changes PostgreSQL data.
 
-The client suite includes automated accessibility checks using Testing Library and `jest-axe`.
+The client suite includes automated accessibility checks using Testing Library and `jest-axe`. The Playwright release test runs against real PostgreSQL and a captured SMTP inbox in CI, verifying registration, email verification, workspace/board/card creation, data export, and account deletion through Chromium.
+
+GitHub Actions runs frontend lint/build/tests, backend integration tests, migration-script generation, the Playwright browser workflow, an npm vulnerability audit, and a complete production Docker build on every pull request and every push to `main`. Dependabot checks npm, NuGet, and GitHub Actions dependencies weekly.
 
 ## Production build
 
@@ -385,9 +397,9 @@ For a commercial launch, also establish a vulnerability-update routine, terms of
 ## Monitoring and health checks
 
 - `GET /health/live` confirms that Kestrel is responding.
-- `GET /health/ready` confirms that the API can connect to PostgreSQL.
+- `GET /health/ready` confirms that the API can connect to PostgreSQL and that SMTP delivery plus `PublicAppUrl` are configured.
 
-Use readiness for deployment health checks and external uptime alerts. A database outage returns HTTP 503 without exposing database details.
+Use readiness for deployment health checks and external uptime alerts. A database outage or missing account-email configuration returns HTTP 503 without exposing secrets.
 
 Production logs are emitted as structured JSON to standard output. Unhandled request errors include the HTTP method, request path, and trace ID. Problem responses expose the same trace ID for support correlation.
 
@@ -434,7 +446,7 @@ JWTs expire after seven days. Signing out and logging in obtains a fresh token. 
 ### Render reports an unhealthy deployment
 
 - Open `/health/live`. If it fails, inspect application startup logs.
-- Open `/health/ready`. If only readiness fails, inspect the PostgreSQL connection and migration logs.
+- Open `/health/ready`. If only readiness fails, inspect PostgreSQL, `PublicAppUrl`, and SMTP environment configuration.
 - Confirm the web service and database are in the same configured region.
 - Confirm Render injected `ConnectionStrings__DefaultConnection` from `enigma-postgres`.
 
@@ -454,8 +466,7 @@ Before presenting Sweet Mahogany Boards as a finished multi-user commercial serv
 - Audit history and activity feeds
 - Card comments and file attachments
 - Search, filters, and notifications
-- End-to-end browser tests
-- Automated dependency and container scanning
+- Automated container vulnerability scanning
 - Signed and notarized desktop releases
 
 ## License

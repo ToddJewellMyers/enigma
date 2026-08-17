@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import type { Workspace } from "../../types/workspace";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
@@ -15,6 +15,10 @@ type AppLayoutProps = {
 
 function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLogout, onOpenAccount, onOpenTerminal }: AppLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const handleSelectWorkspace = useCallback((workspace: Workspace | null) => {
+        onSelectWorkspace(workspace);
+        setIsSidebarOpen(false);
+    }, [onSelectWorkspace]);
 
     return (
         <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100 lg:h-screen">
@@ -40,10 +44,7 @@ function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLo
                 <Sidebar
                     selectedWorkspace={selectedWorkspace}
                     isOpen={isSidebarOpen}
-                    onSelectWorkspace={(workspace) => {
-                        onSelectWorkspace(workspace);
-                        setIsSidebarOpen(false);
-                    }}
+                    onSelectWorkspace={handleSelectWorkspace}
                 />
                 <main id="main-content" tabIndex={-1} className="min-h-0 min-w-0 flex-1 overflow-auto p-4 sm:p-6">{children}</main>
             </div>
