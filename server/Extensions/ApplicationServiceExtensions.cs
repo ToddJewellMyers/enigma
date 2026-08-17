@@ -104,7 +104,8 @@ public static class ApplicationServiceExtensions
     private static void AddHealthChecks(IServiceCollection services) =>
         services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
-            .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
+            .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"])
+            .AddCheck<AccountEmailHealthCheck>("account-email", tags: ["ready"]);
 
     private static void AddProxyForwarding(WebApplicationBuilder builder)
     {

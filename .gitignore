@@ -19,6 +19,8 @@ secrets.json
 **/node_modules/
 **/dist/
 **/coverage/
+**/playwright-report/
+**/test-results/
 **/.vite/
 *.tsbuildinfo
 npm-debug.log*
