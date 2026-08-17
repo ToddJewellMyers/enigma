@@ -1,13 +1,13 @@
-# Enigma desktop editions
+# Sweet Mahogany Boards desktop editions
 
-Enigma has two macOS desktop targets built from the same hosted Kanban application.
+Sweet Mahogany Boards has two macOS desktop targets built from the same hosted Kanban application.
 
 | Edition | Distribution | Local terminal | Sandbox |
 | --- | --- | --- | --- |
-| Enigma Community | GitHub Releases / direct download | Yes | Electron renderer sandbox enabled; shell runs in the main process |
-| Enigma Mac App Store | Mac App Store | No | Apple App Sandbox and Electron renderer sandbox enabled |
+| Sweet Mahogany Boards Community | GitHub Releases / direct download | Yes | Electron renderer sandbox enabled; shell runs in the main process |
+| Sweet Mahogany Boards Mac App Store | Mac App Store | No | Apple App Sandbox and Electron renderer sandbox enabled |
 
-Both editions load `https://enigma-kanban.onrender.com/` by default. Development builds can override this with `ENIGMA_DEV_URL`.
+Both editions load the legacy deployment URL, `https://enigma-kanban.onrender.com/`, by default. Development builds can override this with `SWEET_MAHOGANY_DEV_URL`.
 
 ## Development
 
@@ -19,7 +19,7 @@ npm install
 npm run dev
 ```
 
-The development script sets `ENIGMA_DEV_URL=http://localhost:5173`. Board operations still require the local ASP.NET API.
+The development script sets `SWEET_MAHOGANY_DEV_URL=http://localhost:5173`. Board operations still require the local ASP.NET API.
 
 ## Community edition
 
@@ -66,7 +66,7 @@ The App Store build uses `main.mas.cjs`, does not ship `node-pty` or the termina
 Required Apple assets:
 
 - Active Apple Developer Program membership
-- Registered App ID matching `com.enigma.kanban.mas`
+- Registered App ID matching `com.sweetmahogany.boards.mas`
 - Apple Distribution certificate exported as a password-protected `.p12`
 - Mac App Store distribution provisioning profile
 - App record in App Store Connect
@@ -83,7 +83,7 @@ Electron Builder will finish assembling the bundle and then report that signing 
 Build the signed submission package:
 
 ```bash
-export ENIGMA_MAS_PROVISIONING_PROFILE='/absolute/path/Enigma.provisionprofile'
+export SWEET_MAHOGANY_MAS_PROVISIONING_PROFILE='/absolute/path/SweetMahoganyBoards.provisionprofile'
 cd desktop
 npm run dist:mas
 ```
@@ -100,7 +100,7 @@ The resulting `.pkg` is placed in `desktop/dist/mas` and uploaded as a private w
 
 ## Security boundaries
 
-- Navigation is restricted to the configured Enigma origin.
+- Navigation is restricted to the configured Sweet Mahogany Boards origin.
 - New HTTPS links open in the system browser.
 - Node integration is disabled in both editions.
 - Context isolation is enabled in both editions.

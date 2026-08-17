@@ -1,4 +1,4 @@
-# Enigma Kanban API
+# Sweet Mahogany Boards Kanban API
 
 ## Automated tests
 
@@ -18,6 +18,13 @@ The API uses PostgreSQL through the Npgsql EF Core provider. Configure the hoste
 
 ```text
 ConnectionStrings__DefaultConnection=Host=your-postgres-host;Port=5432;Database=enigma_kanban;Username=your-user;Password=your-password;SSL Mode=Require
+PublicAppUrl=http://localhost:5173
+Email__FromAddress=no-reply@example.com
+Email__Smtp__Host=smtp.example.com
+Email__Smtp__Port=587
+Email__Smtp__Username=your-smtp-user
+Email__Smtp__Password=your-smtp-password
+Email__Smtp__EnableSsl=true
 ```
 
 Do not commit the real connection string. The API fails at startup when it is missing.

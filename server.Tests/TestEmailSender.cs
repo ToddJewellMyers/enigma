@@ -1,0 +1,22 @@
+using server.Email;
+
+namespace server.Tests;
+
+public sealed class TestEmailSender : IEmailSender
+{
+    public bool IsConfigured => true;
+    public Dictionary<string, string> VerificationUrls { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, string> ResetUrls { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public Task SendEmailVerificationAsync(string recipient, string verificationUrl)
+    {
+        VerificationUrls[recipient] = verificationUrl;
+        return Task.CompletedTask;
+    }
+
+    public Task SendPasswordResetAsync(string recipient, string resetUrl)
+    {
+        ResetUrls[recipient] = resetUrl;
+        return Task.CompletedTask;
+    }
+}

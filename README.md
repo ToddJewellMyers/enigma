@@ -1,12 +1,13 @@
-# Enigma
+# Sweet Mahogany Boards
 
-Enigma is a full-stack Kanban application for organizing work into account-scoped workspaces, boards, columns, and cards. It includes a responsive browser interface, a secured ASP.NET Core API, PostgreSQL persistence, and an optional macOS desktop wrapper with a real local terminal.
+Sweet Mahogany Boards is a full-stack Kanban application for organizing work into account-scoped workspaces, boards, columns, and cards. It includes a responsive browser interface, a secured ASP.NET Core API, PostgreSQL persistence, and an optional macOS desktop wrapper with a real local terminal.
 
-Production application: [https://enigma-kanban.onrender.com](https://enigma-kanban.onrender.com)
+Production application (legacy deployment URL): [https://enigma-kanban.onrender.com](https://enigma-kanban.onrender.com)
 
-## What Enigma can do
+## What Sweet Mahogany Boards can do
 
-- Register and log in with an email address and password.
+- Register with email verification, log in securely, and reset forgotten passwords by email.
+- Download a complete JSON account export or permanently delete an account and its data.
 - Keep every user's workspaces and project data isolated from other accounts.
 - Create and delete workspaces.
 - Create and delete boards inside a workspace.
@@ -20,7 +21,7 @@ Production application: [https://enigma-kanban.onrender.com](https://enigma-kanb
 - Open a native local shell from the desktop application.
 - Use multiple terminal tabs, project folders, reviewed shortcuts, output search, persistent settings, and session restoration in the Community edition.
 
-Enigma currently provides private, account-scoped project management. Real-time multi-user editing, workspace invitations, comments, notifications, file attachments, and role-based team permissions are not yet implemented.
+Sweet Mahogany Boards currently provides private, account-scoped project management. Real-time multi-user editing, workspace invitations, comments, notifications, file attachments, and role-based team permissions are not yet implemented.
 
 ## Technology
 
@@ -122,6 +123,13 @@ Create a local PostgreSQL database named `enigma_kanban`, then export the API co
 ```bash
 export ConnectionStrings__DefaultConnection='Host=localhost;Port=5432;Database=enigma_kanban;Username=postgres;Password=postgres'
 export Jwt__Key='replace-with-a-random-secret-at-least-32-characters-long'
+export PublicAppUrl='http://localhost:5173'
+export Email__FromAddress='no-reply@your-domain.example'
+export Email__Smtp__Host='smtp.your-provider.example'
+export Email__Smtp__Port='587'
+export Email__Smtp__Username='your-smtp-user'
+export Email__Smtp__Password='your-smtp-password'
+export Email__Smtp__EnableSsl='true'
 ```
 
 Development CORS origins are already defined in `server/appsettings.Development.json` for Vite's usual local ports.
@@ -154,7 +162,9 @@ Open `http://localhost:5173`. The committed `client/.env.development` sends API 
 
 ### 6. Create an account
 
-Choose **Need an account? Register**, enter a valid email address and a password containing at least eight characters, and submit the form. Enigma will create the onboarding workspace and log you in.
+Choose **Need an account? Register**, enter a valid email address and a password containing at least eight characters, and submit the form. Open the verification link sent by email to activate the account and log in. Existing accounts created before this feature are treated as verified during migration.
+
+If a password is forgotten, choose **Forgot your password?** on the login screen. Reset links expire after one hour, verification links expire after 24 hours, and the server stores only hashes of both token types.
 
 ## Environment variables
 
@@ -182,7 +192,7 @@ Never put a password, database URL, JWT secret, or private API key in a `VITE_*`
 
 Example files are provided at `.env.example`, `client/.env.example`, and `server/appsettings.Production.example.json`.
 
-## Using Enigma
+## Using Sweet Mahogany Boards
 
 ### Workspaces
 
@@ -297,6 +307,7 @@ The root `render.yaml` defines:
 - A generated JWT signing secret
 - A private PostgreSQL connection string
 - `/health/ready` as the deployment health check
+- SMTP-backed verification and password-reset email configuration through secret environment variables
 
 To create the deployment:
 
@@ -308,16 +319,18 @@ To create the deployment:
 6. Apply the Blueprint and wait for `/health/ready` to pass.
 7. Open the assigned `onrender.com` address.
 
+Before enabling registration, set `Email__FromAddress`, `Email__Smtp__Host`, `Email__Smtp__Username`, and `Email__Smtp__Password` in Render. Without valid SMTP settings, the service remains available to existing accounts but returns a clear temporary-unavailability response for registration and password-reset email requests.
+
 Render terminates HTTPS and injects its public hostname into the API's allowed same-origin configuration. Add a custom domain from the Render service settings when one is available; Render can then provision its TLS certificate.
 
 ## Desktop editions
 
-Enigma has two macOS desktop targets:
+Sweet Mahogany Boards has two macOS desktop targets:
 
-- **Enigma Community** is intended for open-source distribution through GitHub Releases. It includes a real local login shell through xterm.js and `node-pty`.
-- **Enigma for the Mac App Store** excludes the terminal, enables Apple App Sandbox and Electron renderer sandboxing, and requests only outbound network access.
+- **Sweet Mahogany Boards Community** is intended for open-source distribution through GitHub Releases. It includes a real local login shell through xterm.js and `node-pty`.
+- **Sweet Mahogany Boards for the Mac App Store** excludes the terminal, enables Apple App Sandbox and Electron renderer sandboxing, and requests only outbound network access.
 
-Both editions load the production Enigma service by default. The terminal runs only on the user's computer and is never exposed by the hosted browser or App Store edition.
+Both editions load the production Sweet Mahogany Boards service by default. The terminal runs only on the user's computer and is never exposed by the hosted browser or App Store edition.
 
 Install desktop dependencies:
 
@@ -353,7 +366,7 @@ See [`desktop/README.md`](desktop/README.md) for build instructions and [`deskto
 
 ## Security
 
-Enigma currently includes:
+Sweet Mahogany Boards currently includes:
 
 - Password hashing through ASP.NET Core Identity's password hasher
 - Seven-day signed JWT authentication
@@ -380,7 +393,7 @@ Production logs are emitted as structured JSON to standard output. Unhandled req
 
 ## Database backups
 
-Prefer the database provider's encrypted automated backups and point-in-time recovery. Enigma also includes a portable logical backup script:
+Prefer the database provider's encrypted automated backups and point-in-time recovery. Sweet Mahogany Boards also includes a portable logical backup script:
 
 ```bash
 export DATABASE_URL='postgresql://user:password@host:5432/enigma?sslmode=require'
@@ -427,26 +440,24 @@ JWTs expire after seven days. Signing out and logging in obtains a fresh token. 
 
 ### The desktop terminal does not open
 
-- Confirm Enigma is running inside Electron rather than a normal web browser.
+- Confirm Sweet Mahogany Boards is running inside Electron rather than a normal web browser.
 - Reinstall desktop dependencies so `node-pty` is compiled for the current Electron version.
 - On macOS, ensure command-line developer tools are installed.
 
 ## Current release considerations
 
-Before presenting Enigma as a finished multi-user commercial service, consider adding:
+Before presenting Sweet Mahogany Boards as a finished multi-user commercial service, consider adding:
 
-- Email verification and password reset
 - Refresh-token or secure cookie session strategy
 - Workspace invitations and member roles
 - Real-time updates for simultaneous users
 - Audit history and activity feeds
 - Card comments and file attachments
 - Search, filters, and notifications
-- Account deletion and data export
 - End-to-end browser tests
 - Automated dependency and container scanning
 - Signed and notarized desktop releases
 
 ## License
 
-Enigma is open-source software released under the [MIT License](LICENSE). You may use, copy, modify, merge, publish, distribute, sublicense, and sell copies subject to the license's copyright-notice and permission-notice requirements.
+Sweet Mahogany Boards is open-source software released under the [MIT License](LICENSE). You may use, copy, modify, merge, publish, distribute, sublicense, and sell copies subject to the license's copyright-notice and permission-notice requirements.

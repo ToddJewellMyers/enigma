@@ -7,6 +7,7 @@ type ValidationProblem = {
 };
 
 export function getErrorMessage(error: unknown, fallback: string) {
+    if (error instanceof Error && !axios.isAxiosError(error) && error.message) return error.message;
     if (!axios.isAxiosError(error)) return fallback;
 
     const data = error.response?.data as ValidationProblem | string | undefined;

@@ -18,10 +18,63 @@ public class WorkflowTests : IClassFixture<KanbanApiFactory>
         var client = _factory.CreateClient();
         var email = $"test-{Guid.NewGuid()}@example.com";
         var response = await client.PostAsJsonAsync("/api/auth/register", new { email, password = "TestPassword123!" });
-        response.EnsureSuccessStatusCode();
-        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var verificationToken = GetQueryValue(_factory.EmailSender.VerificationUrls[email], "verifyToken");
+        var verification = await client.PostAsJsonAsync("/api/auth/verify-email", new { token = verificationToken });
+        verification.EnsureSuccessStatusCode();
+        var auth = await verification.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.Token);
         return client;
+    }
+
+    [Fact]
+    public async Task Account_requires_email_verification_and_supports_password_reset()
+    {
+        using var client = _factory.CreateClient();
+        var email = $"account-{Guid.NewGuid()}@example.com";
+        const string originalPassword = "OriginalPassword123!";
+        var registration = await client.PostAsJsonAsync("/api/auth/register", new { email, password = originalPassword });
+        Assert.Equal(HttpStatusCode.Accepted, registration.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/auth/login", new { email, password = originalPassword })).StatusCode);
+
+        var firstVerificationUrl = _factory.EmailSender.VerificationUrls[email];
+        Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/auth/register", new { email, password = originalPassword })).StatusCode);
+        Assert.NotEqual(firstVerificationUrl, _factory.EmailSender.VerificationUrls[email]);
+        var verificationToken = GetQueryValue(_factory.EmailSender.VerificationUrls[email], "verifyToken");
+        (await client.PostAsJsonAsync("/api/auth/verify-email", new { token = verificationToken })).EnsureSuccessStatusCode();
+        (await client.PostAsJsonAsync("/api/auth/login", new { email, password = originalPassword })).EnsureSuccessStatusCode();
+
+        var forgot = await client.PostAsJsonAsync("/api/auth/forgot-password", new { email });
+        Assert.Equal(HttpStatusCode.Accepted, forgot.StatusCode);
+        var resetToken = GetQueryValue(_factory.EmailSender.ResetUrls[email], "resetToken");
+        var reset = await client.PostAsJsonAsync("/api/auth/reset-password", new { token = resetToken, password = "UpdatedPassword123!" });
+        reset.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/auth/login", new { email, password = originalPassword })).StatusCode);
+        (await client.PostAsJsonAsync("/api/auth/login", new { email, password = "UpdatedPassword123!" })).EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Account_can_export_all_data_and_delete_itself()
+    {
+        using var client = await CreateAuthenticatedClient();
+        var export = await client.GetAsync("/api/account/export");
+        export.EnsureSuccessStatusCode();
+        var payload = await export.Content.ReadFromJsonAsync<AccountExportDto>(JsonOptions);
+        Assert.Equal("Sweet Mahogany Boards account export", payload!.Product);
+        Assert.NotEmpty(payload.Workspaces);
+
+        var wrongPassword = new HttpRequestMessage(HttpMethod.Delete, "/api/account")
+        {
+            Content = JsonContent.Create(new { password = "wrong-password", confirmation = "DELETE" })
+        };
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.SendAsync(wrongPassword)).StatusCode);
+
+        var deletion = new HttpRequestMessage(HttpMethod.Delete, "/api/account")
+        {
+            Content = JsonContent.Create(new { password = "TestPassword123!", confirmation = "DELETE" })
+        };
+        Assert.Equal(HttpStatusCode.NoContent, (await client.SendAsync(deletion)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/workspaces")).StatusCode);
     }
 
     [Fact]
@@ -135,9 +188,17 @@ public class WorkflowTests : IClassFixture<KanbanApiFactory>
         return (await response.Content.ReadFromJsonAsync<T>(JsonOptions))!;
     }
 
+    private static string GetQueryValue(string url, string name)
+    {
+        var query = new Uri(url).Query.TrimStart('?').Split('&');
+        var pair = query.Select(item => item.Split('=', 2)).Single(item => item[0] == name);
+        return Uri.UnescapeDataString(pair[1]);
+    }
+
     private record AuthResponse(string Token, string Email);
     private record WorkspaceDto(Guid Id, string Name);
     private record BoardDto(Guid Id, Guid WorkspaceId, string Name);
     private record ColumnDto(Guid Id, Guid BoardId, string Name, int Position);
     private record CardDto(Guid Id, Guid KanbanColumnId, string Title, int Position, string Priority);
+    private record AccountExportDto(string Product, List<WorkspaceDto> Workspaces);
 }

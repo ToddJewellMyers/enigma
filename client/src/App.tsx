@@ -18,11 +18,13 @@ function App() {
         }} />;
     }
 
-    return <Dashboard email={email} onOpenTerminal={openTerminal} onLogout={() => {
+    const logout = () => {
         localStorage.removeItem("kanban_token");
         localStorage.removeItem("kanban_email");
         setToken(null);
-    }} />;
+    };
+
+    return <Dashboard email={email} onOpenTerminal={openTerminal} onLogout={logout} onAccountDeleted={logout} />;
 }
 
 export default App;

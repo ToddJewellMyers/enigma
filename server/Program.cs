@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using server.Data;
 using server.Middleware;
 using server.Monitoring;
+using server.Email;
 using Npgsql;
 using System.Threading.RateLimiting;
 
@@ -39,8 +40,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]
                     ?? throw new InvalidOperationException("Jwt:Key is missing.")))
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var userIdValue = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var stampValue = context.Principal?.FindFirst("security_stamp")?.Value;
+                if (!Guid.TryParse(userIdValue, out var userId) || !Guid.TryParse(stampValue, out var stamp))
+                {
+                    context.Fail("Invalid account token.");
+                    return;
+                }
+
+                var database = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                if (!await database.Users.AnyAsync(user => user.Id == userId && user.SecurityStamp == stamp))
+                    context.Fail("This account token is no longer valid.");
+            }
+        };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -48,7 +67,7 @@ builder.Services.AddRateLimiter(options =>
         context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions
         {
-            PermitLimit = 10,
+            PermitLimit = builder.Environment.IsEnvironment("Testing") ? 10_000 : 10,
             Window = TimeSpan.FromMinutes(1),
             QueueLimit = 0,
             AutoReplenishment = true
