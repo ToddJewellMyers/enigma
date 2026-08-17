@@ -4,7 +4,7 @@ using server.Data;
 using server.Models;
 using Microsoft.AspNetCore.Authorization;
 using server.Auth;
-using System.ComponentModel.DataAnnotations;
+using server.Contracts;
 
 namespace server.Controllers;
 
@@ -156,12 +156,3 @@ public class CardsController : ControllerBase
         return NoContent();
     }
 }
-
-public record MoveCardRequest(
-    Guid KanbanColumnId,
-    [Range(1, 100000)] int Position);
-public record UpdateCardRequest(
-    [Required, StringLength(200)] string Title,
-    [StringLength(4000)] string? Description,
-    [Required, RegularExpression("^(Low|Normal|High|Urgent)$")] string Priority,
-    DateTime? DueDate);

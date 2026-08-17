@@ -2,26 +2,10 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { SearchAddon } from "@xterm/addon-search";
 import "@xterm/xterm/css/xterm.css";
-
-const storageKeys = {
-  tabs: "enigma_terminal_tabs_v1",
-  settings: "enigma_terminal_settings_v1",
-  history: "enigma_terminal_history_v1"
-};
-const themes = {
-  enigma: { background: "#1b100c", foreground: "#f5e7d8", cursor: "#f6c453", selectionBackground: "#7a3e2080" },
-  midnight: { background: "#030712", foreground: "#dbeafe", cursor: "#60a5fa", selectionBackground: "#1e40af88" },
-  highContrast: { background: "#000000", foreground: "#ffffff", cursor: "#ffff00", selectionBackground: "#ffffff55" }
-};
-const defaultSettings = { fontSize: 14, fontFamily: '"SFMono-Regular", Menlo, Monaco, Consolas, monospace', cursorStyle: "block", theme: "enigma", scrollback: 10000 };
-const shortcuts = [
-  ["Git status", "git status"],
-  ["Start frontend", "npm run dev"],
-  ["Start API", "dotnet run --project server/server.csproj"],
-  ["Run client tests", "npm test"],
-  ["Run API tests", "dotnet test server.Tests/server.Tests.csproj"],
-  ["Build client", "npm run build"]
-];
+import { defaultSettings, shortcuts, storageKeys, themes } from "./terminal-config.js";
+import { readJson } from "./terminal-utils.js";
+import { renderTerminalShell } from "./terminal-shell.js";
+import { createDialogController } from "./terminal-dialogs.js";
 
 const api = window.enigmaTerminal;
 const sessions = new Map();
@@ -30,41 +14,7 @@ let environment;
 let settings = readJson(storageKeys.settings, defaultSettings);
 let commandHistory = readJson(storageKeys.history, []);
 
-document.querySelector("#app").innerHTML = `
-  <main class="app">
-    <header class="titlebar">
-      <h1>SWEET MAHOGANY BOARDS TERMINAL</h1>
-      <div class="titlebar-actions">
-        <button id="choose-folder" class="button" type="button">Choose folder</button>
-        <button id="new-tab" class="button primary" type="button">+ New tab</button>
-        <button id="settings" class="button" type="button" aria-haspopup="dialog">Settings</button>
-      </div>
-    </header>
-    <nav id="tabs" class="tabs" aria-label="Terminal tabs"></nav>
-    <section class="toolbar" aria-label="Terminal commands">
-      ${shortcuts.map(([label, command]) => `<button class="button command" type="button" data-command="${escapeAttribute(command)}">${label}</button>`).join("")}
-      <span class="spacer"></span>
-      <button id="search-toggle" class="button" type="button" aria-expanded="false">Search</button>
-      <button id="copy" class="button" type="button">Copy</button>
-      <button id="paste" class="button" type="button">Paste</button>
-      <button id="clear" class="button" type="button">Clear</button>
-      <button id="restart" class="button" type="button">Restart</button>
-      <button id="history" class="button" type="button" aria-haspopup="dialog">History</button>
-      <button id="ai-explain" class="button" type="button" disabled title="AI is not configured">Explain error (AI)</button>
-    </section>
-    <section id="searchbar" class="searchbar" aria-label="Search terminal output">
-      <label class="sr-only" for="search-input">Search terminal output</label>
-      <input id="search-input" type="search" placeholder="Search output" />
-      <button id="search-previous" class="button" type="button">Previous</button>
-      <button id="search-next" class="button" type="button">Next</button>
-      <button id="search-close" class="button" type="button" aria-label="Close search">×</button>
-    </section>
-    <section id="terminal-stage" class="terminal-stage" aria-label="Active terminal"></section>
-    <footer class="statusbar" aria-live="polite">
-      <span id="status-primary" class="status-primary">Starting terminal…</span>
-      <span id="status-badge" class="status-badge">Local only</span>
-    </footer>
-  </main>`;
+document.querySelector("#app").innerHTML = renderTerminalShell(shortcuts);
 
 const tabsElement = document.querySelector("#tabs");
 const stageElement = document.querySelector("#terminal-stage");
@@ -273,49 +223,14 @@ function applySettings() {
   localStorage.setItem(storageKeys.settings, JSON.stringify(settings));
 }
 
-function showSettings() {
-  showDialog("Terminal settings", `
-    <label class="field">Font size<input id="setting-font-size" type="number" min="10" max="28" value="${settings.fontSize}"></label>
-    <label class="field">Font family<input id="setting-font-family" value="${escapeAttribute(settings.fontFamily)}"></label>
-    <label class="field">Cursor<select id="setting-cursor"><option value="block">Block</option><option value="bar">Bar</option><option value="underline">Underline</option></select></label>
-    <label class="field">Theme<select id="setting-theme"><option value="enigma">Sweet Mahogany</option><option value="midnight">Midnight</option><option value="highContrast">High contrast</option></select></label>
-    <label class="field">Scrollback lines<input id="setting-scrollback" type="number" min="1000" max="100000" step="1000" value="${settings.scrollback}"></label>`, () => {
-      settings = {
-        fontSize: clampNumber(document.querySelector("#setting-font-size").value, 10, 28, 14),
-        fontFamily: document.querySelector("#setting-font-family").value.trim() || defaultSettings.fontFamily,
-        cursorStyle: document.querySelector("#setting-cursor").value,
-        theme: document.querySelector("#setting-theme").value,
-        scrollback: clampNumber(document.querySelector("#setting-scrollback").value, 1000, 100000, 10000)
-      };
-      applySettings();
-    }, () => {
-      document.querySelector("#setting-cursor").value = settings.cursorStyle;
-      document.querySelector("#setting-theme").value = settings.theme;
-    });
-}
-
-function showHistory() {
-  const body = commandHistory.length
-    ? `<div class="field"><label for="history-select">Recent commands</label><select id="history-select" size="8">${commandHistory.map((command) => `<option value="${escapeAttribute(command)}">${escapeHtml(command)}</option>`).join("")}</select></div>`
-    : "<p>No commands have been recorded yet.</p>";
-  showDialog("Command history", body, () => {
-    const command = document.querySelector("#history-select")?.value;
-    if (command) runReviewedCommand(command);
-  }, null, commandHistory.length ? "Review and run" : "Close");
-}
-
-function showDialog(title, body, onConfirm, onReady, confirmLabel = "Save") {
-  const backdrop = document.createElement("div");
-  backdrop.className = "dialog-backdrop";
-  backdrop.innerHTML = `<section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><h2 id="dialog-title">${title}</h2>${body}<div class="dialog-actions"><button class="button cancel" type="button">Cancel</button><button class="button primary confirm" type="button">${confirmLabel}</button></div></section>`;
-  const close = () => backdrop.remove();
-  backdrop.querySelector(".cancel").addEventListener("click", close);
-  backdrop.querySelector(".confirm").addEventListener("click", () => { onConfirm(); close(); });
-  backdrop.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); });
-  document.body.append(backdrop);
-  onReady?.();
-  backdrop.querySelector("input, select, button")?.focus();
-}
+const dialogs = createDialogController({
+  defaultSettings,
+  getSettings: () => settings,
+  setSettings: (nextSettings) => { settings = nextSettings; },
+  getHistory: () => commandHistory,
+  runCommand: runReviewedCommand,
+  applySettings
+});
 
 document.querySelector("#new-tab").addEventListener("click", () => createTab(sessions.get(activeId)?.cwd));
 document.querySelector("#choose-folder").addEventListener("click", async () => {
@@ -338,8 +253,8 @@ document.querySelector("#paste").addEventListener("click", async () => {
     state.terminal.focus();
   }
 });
-document.querySelector("#history").addEventListener("click", showHistory);
-document.querySelector("#settings").addEventListener("click", showSettings);
+document.querySelector("#history").addEventListener("click", dialogs.showHistory);
+document.querySelector("#settings").addEventListener("click", dialogs.showSettings);
 document.querySelector("#search-toggle").addEventListener("click", () => toggleSearch(true));
 document.querySelector("#search-close").addEventListener("click", () => toggleSearch(false));
 document.querySelector("#search-next").addEventListener("click", () => sessions.get(activeId)?.searchAddon.findNext(searchInput.value));
@@ -377,13 +292,6 @@ function toggleSearch(open) {
   if (open) searchInput.focus();
   else sessions.get(activeId)?.terminal.focus();
 }
-
-function readJson(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
-}
-function clampNumber(value, min, max, fallback) { const parsed = Number(value); return Number.isFinite(parsed) ? Math.min(max, Math.max(min, parsed)) : fallback; }
-function escapeHtml(value) { return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]); }
-function escapeAttribute(value) { return escapeHtml(String(value)); }
 
 initialize().catch((error) => {
   statusElement.textContent = `Terminal failed to start: ${error.message}`;

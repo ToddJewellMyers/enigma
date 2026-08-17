@@ -45,20 +45,24 @@ Kanban Board/
 │   ├── public/             Static icons and brand assets
 │   └── src/
 │       ├── api/            Axios setup and error handling
-│       ├── components/     Board, layout, UI, and terminal components
+│       ├── components/     Reusable board, account, layout, and UI components
+│       ├── features/       Board/card workflows, hooks, forms, and views
 │       ├── pages/          Authentication and dashboard pages
 │       ├── services/       Typed API calls
 │       └── types/          Client-side domain types
 ├── server/                 ASP.NET Core API
 │   ├── Auth/               Authenticated-user helpers
-│   ├── Controllers/        Authentication and Kanban endpoints
+│   ├── Contracts/          Validated API request and response records
+│   ├── Controllers/        Thin HTTP endpoints grouped by feature
 │   ├── Data/               EF Core context and onboarding seed
+│   ├── Email/              Account email interface and SMTP delivery
+│   ├── Extensions/         Service registration and HTTP pipeline setup
 │   ├── Migrations/         PostgreSQL schema migrations
-│   ├── Middleware/         Structured request error logging
+│   ├── Middleware/         Error logging and security headers
 │   ├── Models/             Database entities and validation
 │   └── Monitoring/         Database health check
-├── server.Tests/           API integration and workflow tests
-├── desktop/                Electron wrapper and terminal bridge
+├── server.Tests/           Focused health, account, and Kanban integration tests
+├── desktop/                Electron wrapper and modular terminal UI/runtime
 ├── scripts/                PostgreSQL backup tooling
 ├── Dockerfile              Production multi-stage image
 └── render.yaml             Render web service and database Blueprint
