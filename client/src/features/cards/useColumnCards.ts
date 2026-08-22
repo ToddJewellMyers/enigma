@@ -51,8 +51,13 @@ export function useColumnCards(columnId: string, refreshVersion: number, onCardM
     }
 
     useEffect(() => {
-        getCards(columnId).then((data) => { setCards(data); setError(""); })
+        const load = () => getCards(columnId).then((data) => { setCards(data); setError(""); })
             .catch((requestError: unknown) => setError(getErrorMessage(requestError, "Cards could not be loaded.")));
+        void load();
+        const timer = window.setInterval(() => {
+            if (document.visibilityState === "visible") void load();
+        }, 5_000);
+        return () => window.clearInterval(timer);
     }, [columnId, refreshVersion]);
 
     return { cards, error, add, move, remove, update };

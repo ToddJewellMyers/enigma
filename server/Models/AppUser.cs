@@ -13,4 +13,5 @@ public class AppUser
     public DateTime? PasswordResetTokenExpiresAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public List<Workspace> Workspaces { get; set; } = new();
+    public List<WorkspaceMember> WorkspaceMemberships { get; set; } = new();
 }

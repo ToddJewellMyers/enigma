@@ -70,6 +70,8 @@ public class AccountController(AppDbContext context) : ControllerBase
             return BadRequest("Type DELETE to confirm permanent account deletion.");
 
         var workspaces = await context.Workspaces.Where(workspace => workspace.UserId == user.Id).ToListAsync();
+        var invitations = await context.WorkspaceInvitations.Where(invitation => invitation.InvitedByUserId == user.Id).ToListAsync();
+        context.WorkspaceInvitations.RemoveRange(invitations);
         context.Workspaces.RemoveRange(workspaces);
         context.Users.Remove(user);
         await context.SaveChangesAsync();

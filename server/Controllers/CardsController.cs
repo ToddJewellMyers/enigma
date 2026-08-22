@@ -24,7 +24,7 @@ public class CardsController : ControllerBase
     public async Task<ActionResult<List<KanbanCard>>> GetCards(Guid columnId)
     {
         return await _context.KanbanCards
-            .Where(c => c.KanbanColumnId == columnId && c.KanbanColumn!.Board!.Workspace!.UserId == User.GetUserId())
+            .Where(c => c.KanbanColumnId == columnId && (c.KanbanColumn!.Board!.Workspace!.UserId == User.GetUserId() || c.KanbanColumn.Board.Workspace.Members.Any(member => member.UserId == User.GetUserId())))
             .OrderBy(c => c.Position)
             .ToListAsync();
     }
@@ -32,13 +32,14 @@ public class CardsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<KanbanCard>> CreateCard(KanbanCard card)
     {
-        var columnExists = await _context.KanbanColumns
-            .AnyAsync(column => column.Id == card.KanbanColumnId && column.Board!.Workspace!.UserId == User.GetUserId());
+        var workspaceId = await _context.KanbanColumns.Where(column => column.Id == card.KanbanColumnId)
+            .Select(column => (Guid?)column.Board!.WorkspaceId).SingleOrDefaultAsync();
 
-        if (!columnExists)
+        if (workspaceId is null)
         {
             return BadRequest("The selected column does not exist.");
         }
+        if (!await WorkspaceAuthorization.CanEdit(_context, workspaceId.Value, User.GetUserId())) return Forbid();
 
         _context.KanbanCards.Add(card);
         await _context.SaveChangesAsync();
@@ -50,12 +51,13 @@ public class CardsController : ControllerBase
     public async Task<ActionResult<KanbanCard>> UpdateCard(Guid cardId, UpdateCardRequest request)
     {
         var userId = User.GetUserId();
-        var card = await _context.KanbanCards.SingleOrDefaultAsync(item => item.Id == cardId && item.KanbanColumn!.Board!.Workspace!.UserId == userId);
+        var card = await _context.KanbanCards.Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
 
         if (card is null)
         {
             return NotFound();
         }
+        if (!await WorkspaceAuthorization.CanEdit(_context, card.KanbanColumn!.Board!.WorkspaceId, userId)) return Forbid();
 
         if (string.IsNullOrWhiteSpace(request.Title))
         {
@@ -79,15 +81,17 @@ public class CardsController : ControllerBase
     public async Task<ActionResult<KanbanCard>> MoveCard(Guid cardId, MoveCardRequest request)
     {
         var userId = User.GetUserId();
-        var card = await _context.KanbanCards.SingleOrDefaultAsync(item => item.Id == cardId && item.KanbanColumn!.Board!.Workspace!.UserId == userId);
+        var card = await _context.KanbanCards.Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
 
         if (card is null)
         {
             return NotFound();
         }
+        var workspaceId = card.KanbanColumn!.Board!.WorkspaceId;
+        if (!await WorkspaceAuthorization.CanEdit(_context, workspaceId, userId)) return Forbid();
 
         var targetColumnExists = await _context.KanbanColumns
-            .AnyAsync(column => column.Id == request.KanbanColumnId && column.Board!.Workspace!.UserId == userId);
+            .AnyAsync(column => column.Id == request.KanbanColumnId && column.Board!.WorkspaceId == workspaceId);
 
         if (!targetColumnExists)
         {
@@ -132,12 +136,13 @@ public class CardsController : ControllerBase
     public async Task<IActionResult> DeleteCard(Guid cardId)
     {
         var userId = User.GetUserId();
-        var card = await _context.KanbanCards.SingleOrDefaultAsync(item => item.Id == cardId && item.KanbanColumn!.Board!.Workspace!.UserId == userId);
+        var card = await _context.KanbanCards.Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
 
         if (card is null)
         {
             return NotFound();
         }
+        if (!await WorkspaceAuthorization.CanEdit(_context, card.KanbanColumn!.Board!.WorkspaceId, userId)) return Forbid();
 
         var remainingCards = await _context.KanbanCards
             .Where(existingCard =>

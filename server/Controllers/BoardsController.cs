@@ -23,15 +23,14 @@ public class BoardsController : ControllerBase
     public async Task<ActionResult<List<Board>>> GetBoards(Guid workspaceId)
     {
         return await _context.Boards
-            .Where(b => b.WorkspaceId == workspaceId && b.Workspace!.UserId == User.GetUserId())
+            .Where(b => b.WorkspaceId == workspaceId && (b.Workspace!.UserId == User.GetUserId() || b.Workspace.Members.Any(member => member.UserId == User.GetUserId())))
             .ToListAsync();
     }
 
     [HttpPost]
     public async Task<ActionResult<Board>> CreateBoard(Board board)
     {
-        var ownsWorkspace = await _context.Workspaces.AnyAsync(workspace => workspace.Id == board.WorkspaceId && workspace.UserId == User.GetUserId());
-        if (!ownsWorkspace) return NotFound();
+        if (!await WorkspaceAuthorization.CanEdit(_context, board.WorkspaceId, User.GetUserId())) return Forbid();
         _context.Boards.Add(board);
         await _context.SaveChangesAsync();
 
@@ -42,12 +41,13 @@ public class BoardsController : ControllerBase
     public async Task<IActionResult> DeleteBoard(Guid boardId)
     {
         var userId = User.GetUserId();
-        var board = await _context.Boards.SingleOrDefaultAsync(item => item.Id == boardId && item.Workspace!.UserId == userId);
+        var board = await _context.Boards.SingleOrDefaultAsync(item => item.Id == boardId);
 
         if (board is null)
         {
             return NotFound();
         }
+        if (!await WorkspaceAuthorization.CanEdit(_context, board.WorkspaceId, userId)) return Forbid();
 
         _context.Boards.Remove(board);
         await _context.SaveChangesAsync();
