@@ -56,7 +56,7 @@ export function useColumnCards(columnId: string, refreshVersion: number, onCardM
         void load();
         const timer = window.setInterval(() => {
             if (document.visibilityState === "visible") void load();
-        }, 5_000);
+        }, 60_000);
         return () => window.clearInterval(timer);
     }, [columnId, refreshVersion]);
 

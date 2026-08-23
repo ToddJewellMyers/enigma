@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using server.Data;
 using server.Middleware;
+using server.Realtime;
 
 namespace server.Extensions;
 
@@ -47,6 +48,7 @@ public static class ApplicationPipelineExtensions
     private static void MapEndpoints(WebApplication app)
     {
         app.MapControllers();
+        app.MapHub<WorkspaceHub>("/hubs/workspaces");
         app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = check => check.Tags.Contains("live") });
         app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
         app.MapFallbackToFile("index.html");

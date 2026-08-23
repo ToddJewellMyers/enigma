@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using server.Data;
 using server.Email;
 using server.Monitoring;
+using server.Realtime;
 
 namespace server.Extensions;
 
@@ -24,6 +25,8 @@ public static class ApplicationServiceExtensions
             options.CustomizeProblemDetails = context =>
                 context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier);
         builder.Services.AddAuthorization();
+        builder.Services.AddSignalR();
+        builder.Services.AddSingleton<WorkspaceRealtimeNotifier>();
         builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
@@ -68,6 +71,13 @@ public static class ApplicationServiceExtensions
                 };
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken) && context.HttpContext.Request.Path.StartsWithSegments("/hubs/workspaces"))
+                            context.Token = accessToken;
+                        return Task.CompletedTask;
+                    },
                     OnTokenValidated = async context =>
                     {
                         var userIdValue = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

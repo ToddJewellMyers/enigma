@@ -5,11 +5,11 @@ import { useBoards } from "../../features/boards/useBoards";
 import BoardHeader from "../../features/boards/BoardHeader";
 import BoardTabs from "../../features/boards/BoardTabs";
 
-type BoardProps = { selectedWorkspace: Workspace | null; onOpenTeam: () => void };
+type BoardProps = { selectedWorkspace: Workspace | null; onOpenTeam: () => void; realtimeRevision: number };
 
-function Board({ selectedWorkspace, onOpenTeam }: BoardProps) {
+function Board({ selectedWorkspace, onOpenTeam, realtimeRevision }: BoardProps) {
     const [cardRefreshVersion, setCardRefreshVersion] = useState(0);
-    const boardState = useBoards(selectedWorkspace);
+    const boardState = useBoards(selectedWorkspace, realtimeRevision);
 
     if (!selectedWorkspace) return <section><h1 className="text-3xl font-bold text-white">Select a workspace</h1><p className="mt-2 text-slate-400">Choose or create a workspace to start.</p></section>;
 
@@ -18,7 +18,7 @@ function Board({ selectedWorkspace, onOpenTeam }: BoardProps) {
         {boardState.error && <p role="alert" className="mb-5 rounded-lg bg-red-950/50 p-3 text-sm text-red-300">{boardState.error}</p>}
         <BoardTabs boards={boardState.boards} activeId={boardState.activeBoardId} onSelect={(id) => void boardState.selectBoard(id)} onDelete={(board) => void boardState.removeBoard(board)} canEdit={selectedWorkspace.role !== "Viewer"} />
         <div className="grid grid-cols-1 gap-5 pb-4 md:flex md:overflow-x-auto">
-            {boardState.columns.map((column) => <Column id={column.id} title={column.name} refreshVersion={cardRefreshVersion} onCardMoved={() => setCardRefreshVersion((version) => version + 1)} canEdit={selectedWorkspace.role !== "Viewer"} key={column.id} />)}
+            {boardState.columns.map((column) => <Column id={column.id} title={column.name} refreshVersion={cardRefreshVersion + realtimeRevision} onCardMoved={() => setCardRefreshVersion((version) => version + 1)} canEdit={selectedWorkspace.role !== "Viewer"} key={column.id} />)}
         </div>
     </section>;
 }

@@ -11,13 +11,18 @@ type SidebarProps = {
     selectedWorkspace: Workspace | null;
     isOpen: boolean;
     onSelectWorkspace: (workspace: Workspace | null) => void;
+    refreshVersion: number;
 };
 
 function Sidebar({
     selectedWorkspace,
     isOpen,
     onSelectWorkspace,
+    refreshVersion,
 }: SidebarProps) {
+    const selectedWorkspaceId = selectedWorkspace?.id ?? null;
+    const selectedWorkspaceRole = selectedWorkspace?.role;
+    const selectedWorkspaceMemberCount = selectedWorkspace?.memberCount;
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [newWorkspaceName, setNewWorkspaceName] = useState("");
     const [error, setError] = useState("");
@@ -76,6 +81,20 @@ function Sidebar({
 
         void loadInitialWorkspaces();
     }, [onSelectWorkspace]);
+
+    useEffect(() => {
+        if (refreshVersion === 0) return;
+        getWorkspaces().then((data) => {
+            setWorkspaces(data);
+            if (selectedWorkspaceId && !data.some((workspace) => workspace.id === selectedWorkspaceId))
+                onSelectWorkspace(data[0] ?? null);
+            else if (selectedWorkspaceId) {
+                const updated = data.find((workspace) => workspace.id === selectedWorkspaceId);
+                if (updated && (updated.role !== selectedWorkspaceRole || updated.memberCount !== selectedWorkspaceMemberCount))
+                    onSelectWorkspace(updated);
+            }
+        }).catch(() => { /* Background synchronization remains quiet. */ });
+    }, [onSelectWorkspace, refreshVersion, selectedWorkspaceId, selectedWorkspaceMemberCount, selectedWorkspaceRole]);
 
     useEffect(() => {
         if (!selectedWorkspace) return;

@@ -210,7 +210,7 @@ Open a workspace and select **Team** to invite a collaborator by email. Every pe
 - **Editor** can create, edit, move, and delete boards, columns, and cards.
 - **Viewer** can open all workspace boards and cards without changing them.
 
-Invitation links expire after seven days and must be accepted by an account using the invited email address. Pending invitations and active members appear in the Team dialog. Owners can promote, restrict, or remove collaborators at any time. Board and card data refresh automatically while the application is visible, allowing teammates on desktop and iPad browsers to see each other's changes within a few seconds.
+Invitation links expire after seven days and must be accepted by an account using the invited email address. Pending invitations and active members appear in the Team dialog. Owners can promote, restrict, or remove collaborators at any time. Authenticated SignalR connections synchronize board, column, card, and membership changes immediately across desktop and iPad browsers. The header shows **Live**, **Connecting**, **Reconnecting**, or **Offline**, and a quiet one-minute refresh provides a fallback if a network blocks real-time transport.
 
 ### Boards
 
@@ -302,7 +302,7 @@ npx playwright test --list
 
 The API integration suite covers health, authentication, onboarding data, workspace lifecycle, invitation acceptance, owner/editor/viewer authorization, member removal, board lifecycle, ordered columns, card creation, editing, movement, and deletion. It uses an isolated in-memory database and never changes PostgreSQL data.
 
-The client suite includes collaboration component tests and automated accessibility checks using Testing Library and `jest-axe`. The Playwright release test runs against real PostgreSQL and a captured SMTP inbox in CI, verifying two-account registration, email verification, workspace invitations, shared card creation, data export, and account deletion through Chromium.
+The client suite includes collaboration component tests and automated accessibility checks using Testing Library and `jest-axe`. The Playwright release test runs against real PostgreSQL and a captured SMTP inbox in CI, verifying two-account registration, email verification, workspace invitations, real-time cross-browser card synchronization, shared card creation, data export, and account deletion through Chromium.
 
 GitHub Actions runs frontend lint/build/tests, backend integration tests, migration-script generation, the Playwright browser workflow, an npm vulnerability audit, and a complete production Docker build on every pull request and every push to `main`. Dependabot checks npm, NuGet, and GitHub Actions dependencies weekly.
 
