@@ -6,5 +6,7 @@ export interface KanbanCard {
     position: number;
     priority: string;
     dueDate?: string;
+    assigneeUserId?: string;
+    assigneeEmail?: string;
     createdAt: string;
 }

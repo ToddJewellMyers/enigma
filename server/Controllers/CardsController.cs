@@ -19,6 +19,7 @@ public class CardsController(AppDbContext context, WorkspaceRealtimeNotifier rea
     {
         return await context.KanbanCards
             .Where(c => c.KanbanColumnId == columnId && (c.KanbanColumn!.Board!.Workspace!.UserId == User.GetUserId() || c.KanbanColumn.Board.Workspace.Members.Any(member => member.UserId == User.GetUserId())))
+            .Include(c => c.Assignee)
             .OrderBy(c => c.Position)
             .ToListAsync();
     }
@@ -72,8 +73,15 @@ public class CardsController(AppDbContext context, WorkspaceRealtimeNotifier rea
                 : DateTime.SpecifyKind(dueDate, DateTimeKind.Utc)
             : null;
 
+        var workspaceId = card.KanbanColumn.Board.WorkspaceId;
+        if (request.AssigneeUserId is { } assigneeUserId &&
+            !await context.WorkspaceMembers.AnyAsync(member => member.WorkspaceId == workspaceId && member.UserId == assigneeUserId))
+            return BadRequest("The selected assignee is not a member of this workspace.");
+        card.AssigneeUserId = request.AssigneeUserId;
+
         await context.SaveChangesAsync();
-        await realtime.NotifyAsync(card.KanbanColumn.Board.WorkspaceId, "card-updated", card.Id, HttpContext.RequestAborted);
+        if (card.AssigneeUserId is not null) await context.Entry(card).Reference(item => item.Assignee).LoadAsync();
+        await realtime.NotifyAsync(workspaceId, "card-updated", card.Id, HttpContext.RequestAborted);
         return Ok(card);
     }
 
