@@ -19,3 +19,7 @@ export async function createColumn(
 
     return response.data;
 }
+
+export async function deleteColumn(columnId: string) {
+    await api.delete(`/columns/${columnId}`);
+}

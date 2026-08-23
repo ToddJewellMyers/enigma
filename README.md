@@ -216,6 +216,10 @@ Invitation links expire after seven days and must be accepted by an account usin
 
 Select a workspace, enter a board name, and select **+ Board**. New boards receive five workflow columns automatically. Use the board tabs to switch boards or the delete control to remove a board.
 
+### Columns
+
+Enter a custom workflow name and select **+ Column** to add it to the active board. Editors and owners can remove any column—including the default Backlog, Ready, In Progress, Testing, and Done columns—using the **×** control in its header. Deleting a column also permanently deletes every card inside it, so the app asks for confirmation first.
+
 ### Cards
 
 Enter a title at the top of a column and select **+** to create a card. A card can contain:

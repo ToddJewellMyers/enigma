@@ -25,6 +25,13 @@ test("a team can verify accounts, collaborate, and complete the core Kanban work
     await expect(page.getByRole("heading", { name: "Release Board" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Backlog" })).toBeVisible();
 
+    await page.getByLabel("New column name").fill("Review");
+    await page.getByRole("button", { name: "+ Column" }).click();
+    await expect(page.getByRole("heading", { name: "Review" })).toBeVisible();
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Delete column Ready" }).click();
+    await expect(page.getByRole("heading", { name: "Ready" })).toHaveCount(0);
+
     await page.getByLabel("New card title for Backlog").fill("Production smoke test");
     await page.getByRole("button", { name: "Add card to Backlog" }).click();
     await expect(page.getByRole("heading", { name: "Production smoke test" })).toBeVisible();
