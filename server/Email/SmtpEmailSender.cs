@@ -5,17 +5,19 @@ namespace server.Email;
 
 public sealed class SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEmailSender> logger) : IEmailSender
 {
-    private readonly string? _host = configuration["Email:Smtp:Host"];
-    private readonly string? _username = configuration["Email:Smtp:Username"];
-    private readonly string? _password = configuration["Email:Smtp:Password"];
-    private readonly string? _fromAddress = configuration["Email:FromAddress"];
+    private readonly string? _host = configuration["Email:Smtp:Host"]?.Trim();
+    private readonly string? _username = configuration["Email:Smtp:Username"]?.Trim();
+    private readonly string? _password = configuration["Email:Smtp:Password"]?.Replace(" ", string.Empty).Trim();
+    private readonly string? _fromAddress = configuration["Email:FromAddress"]?.Trim();
     private readonly string _fromName = configuration["Email:FromName"] ?? "Sweet Mahogany Boards";
     private readonly int _port = configuration.GetValue("Email:Smtp:Port", 587);
     private readonly bool _enableSsl = configuration.GetValue("Email:Smtp:EnableSsl", true);
 
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(_host) &&
-        !string.IsNullOrWhiteSpace(_fromAddress);
+        !string.IsNullOrWhiteSpace(_fromAddress) &&
+        !string.IsNullOrWhiteSpace(_username) &&
+        !string.IsNullOrWhiteSpace(_password);
 
     public Task SendEmailVerificationAsync(string recipient, string verificationUrl) => SendAsync(
         recipient,
@@ -49,10 +51,10 @@ public sealed class SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEm
         using var client = new SmtpClient(_host!, _port)
         {
             EnableSsl = _enableSsl,
-            DeliveryMethod = SmtpDeliveryMethod.Network
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            UseDefaultCredentials = false,
+            Credentials = new NetworkCredential(_username!, _password!)
         };
-        if (!string.IsNullOrWhiteSpace(_username))
-            client.Credentials = new NetworkCredential(_username, _password);
 
         try
         {
