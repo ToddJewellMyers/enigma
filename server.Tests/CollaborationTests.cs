@@ -7,6 +7,27 @@ namespace server.Tests;
 public class CollaborationTests(KanbanApiFactory factory) : WorkflowTestBase(factory), IClassFixture<KanbanApiFactory>
 {
     [Fact]
+    public async Task Invitation_link_remains_available_when_email_delivery_fails()
+    {
+        using var owner = await CreateAuthenticatedClient();
+        var workspace = await CreateAsync<WorkspaceDto>(owner, "/api/workspaces", new { name = "Fallback Invites" });
+        Factory.EmailSender.FailInvitations = true;
+        try
+        {
+            var response = await owner.PostAsJsonAsync($"/api/workspaces/{workspace.Id}/invitations", new { email = "partner@example.com", role = "Editor" });
+            response.EnsureSuccessStatusCode();
+            var invitation = (await response.Content.ReadFromJsonAsync<WorkspaceInvitationDto>(JsonOptions))!;
+            Assert.False(invitation.EmailSent);
+            Assert.Contains("inviteToken=", invitation.InviteUrl);
+            Assert.Contains((await owner.GetFromJsonAsync<List<WorkspaceInvitationDto>>($"/api/workspaces/{workspace.Id}/invitations", JsonOptions))!, item => item.Id == invitation.Id);
+        }
+        finally
+        {
+            Factory.EmailSender.FailInvitations = false;
+        }
+    }
+
+    [Fact]
     public async Task Owner_can_invite_editor_who_can_collaborate_but_not_administer_workspace()
     {
         using var owner = await CreateAuthenticatedClient();

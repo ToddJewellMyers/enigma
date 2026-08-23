@@ -4,7 +4,13 @@ namespace server.Contracts;
 
 public record WorkspaceResponse(Guid Id, string Name, DateTime CreatedAt, string Role, int MemberCount);
 public record WorkspaceMemberResponse(Guid UserId, string Email, string Role, DateTime JoinedAt);
-public record WorkspaceInvitationResponse(Guid Id, string Email, string Role, DateTime ExpiresAt);
+public record WorkspaceInvitationResponse(
+    Guid Id,
+    string Email,
+    string Role,
+    DateTime ExpiresAt,
+    string? InviteUrl = null,
+    bool EmailSent = true);
 
 public class CreateWorkspaceRequest
 {
