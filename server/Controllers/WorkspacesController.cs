@@ -6,13 +6,14 @@ using server.Contracts;
 using server.Data;
 using server.Email;
 using server.Models;
+using server.Realtime;
 
 namespace server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class WorkspacesController(AppDbContext context, IConfiguration configuration, IEmailSender emailSender) : ControllerBase
+public class WorkspacesController(AppDbContext context, IConfiguration configuration, IEmailSender emailSender, WorkspaceRealtimeNotifier realtime) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<WorkspaceResponse>>> GetWorkspaces()
@@ -96,6 +97,7 @@ public class WorkspacesController(AppDbContext context, IConfiguration configura
             await context.SaveChangesAsync();
             return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, detail: "The invitation email could not be sent. Please try again later.");
         }
+        await realtime.NotifyAsync(workspaceId, "invitation-created", invitation.Id, HttpContext.RequestAborted);
         return Ok(new WorkspaceInvitationResponse(invitation.Id, invitation.Email, invitation.Role, invitation.ExpiresAt));
     }
 
@@ -114,6 +116,7 @@ public class WorkspacesController(AppDbContext context, IConfiguration configura
         context.WorkspaceInvitations.Remove(invitation);
         await context.SaveChangesAsync();
         var memberCount = await context.WorkspaceMembers.CountAsync(member => member.WorkspaceId == invitation.WorkspaceId);
+        await realtime.NotifyAsync(invitation.WorkspaceId, "member-joined", userId, HttpContext.RequestAborted);
         return Ok(new WorkspaceResponse(invitation.WorkspaceId, invitation.Workspace.Name, invitation.Workspace.CreatedAt, invitation.Role, memberCount));
     }
 
@@ -128,6 +131,7 @@ public class WorkspacesController(AppDbContext context, IConfiguration configura
         if (member.Role == WorkspaceRoles.Owner) return BadRequest("The workspace owner role cannot be changed.");
         member.Role = request.Role;
         await context.SaveChangesAsync();
+        await realtime.NotifyAsync(workspaceId, "member-role-changed", memberUserId, HttpContext.RequestAborted);
         return NoContent();
     }
 
@@ -141,6 +145,7 @@ public class WorkspacesController(AppDbContext context, IConfiguration configura
         if (member.Role == WorkspaceRoles.Owner) return BadRequest("The workspace owner cannot be removed.");
         context.WorkspaceMembers.Remove(member);
         await context.SaveChangesAsync();
+        await realtime.NotifyAsync(workspaceId, "member-removed", memberUserId, HttpContext.RequestAborted);
         return NoContent();
     }
 
@@ -153,6 +158,7 @@ public class WorkspacesController(AppDbContext context, IConfiguration configura
         if (workspace is null) return NotFound();
         context.Workspaces.Remove(workspace);
         await context.SaveChangesAsync();
+        await realtime.NotifyAsync(workspaceId, "workspace-deleted", workspaceId, HttpContext.RequestAborted);
         return NoContent();
     }
 }

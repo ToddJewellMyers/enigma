@@ -5,9 +5,10 @@ type HeaderProps = {
     onLogout: () => void;
     onOpenAccount: () => void;
     onOpenTerminal?: () => void;
+    realtimeStatus: "connecting" | "live" | "reconnecting" | "offline";
 };
 
-function Header({ email, isSidebarOpen, onMenuClick, onLogout, onOpenAccount, onOpenTerminal }: HeaderProps) {
+function Header({ email, isSidebarOpen, onMenuClick, onLogout, onOpenAccount, onOpenTerminal, realtimeStatus }: HeaderProps) {
     return (
         <header className="mahogany-header z-40 flex h-16 shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900 px-4 sm:px-6">
             <div className="flex items-center gap-3">
@@ -29,6 +30,10 @@ function Header({ email, isSidebarOpen, onMenuClick, onLogout, onOpenAccount, on
             </div>
 
             <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+                <span role="status" className="hidden items-center gap-1.5 text-xs text-slate-300 md:flex" title="Team synchronization status">
+                    <span className={`h-2 w-2 rounded-full ${realtimeStatus === "live" ? "bg-emerald-400" : realtimeStatus === "offline" ? "bg-red-400" : "bg-amber-400"}`} aria-hidden="true" />
+                    {realtimeStatus === "live" ? "Live" : realtimeStatus === "reconnecting" ? "Reconnecting" : realtimeStatus === "connecting" ? "Connecting" : "Offline"}
+                </span>
                 {onOpenTerminal && (
                     <button type="button" onClick={onOpenTerminal} className="hidden rounded-lg bg-slate-950 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 sm:block">Terminal</button>
                 )}

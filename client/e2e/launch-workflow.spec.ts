@@ -28,6 +28,7 @@ test("a team can verify accounts, collaborate, and complete the core Kanban work
     await page.getByLabel("New card title for Backlog").fill("Production smoke test");
     await page.getByRole("button", { name: "Add card to Backlog" }).click();
     await expect(page.getByRole("heading", { name: "Production smoke test" })).toBeVisible();
+    await expect(page.getByTitle("Team synchronization status")).toContainText("Live");
 
     await page.getByRole("button", { name: "Team" }).click();
     await page.getByLabel("Teammate email").fill(partnerEmail);
@@ -47,9 +48,11 @@ test("a team can verify accounts, collaborate, and complete the core Kanban work
     await partnerPage.goto(partnerVerificationUrl);
     await expect(partnerPage.getByText("You joined Launch QA.")).toBeVisible();
     await expect(partnerPage.getByRole("heading", { name: "Release Board" })).toBeVisible();
+    await expect(partnerPage.getByTitle("Team synchronization status")).toContainText("Live");
     await partnerPage.getByLabel("New card title for Backlog").fill("Partner iPad task");
     await partnerPage.getByRole("button", { name: "Add card to Backlog" }).click();
     await expect(partnerPage.getByRole("heading", { name: "Partner iPad task" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Partner iPad task" })).toBeVisible({ timeout: 10_000 });
 
     await partnerPage.getByRole("button", { name: "Account" }).click();
     await partnerPage.getByLabel("Current password").fill(password);

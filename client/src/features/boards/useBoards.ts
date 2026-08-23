@@ -8,7 +8,7 @@ import { getErrorMessage } from "../../api/errorMessage";
 
 const defaultColumns = ["Backlog", "Ready", "In Progress", "Testing", "Done"];
 
-export function useBoards(selectedWorkspace: Workspace | null) {
+export function useBoards(selectedWorkspace: Workspace | null, realtimeRevision: number) {
     const [boards, setBoards] = useState<Board[]>([]);
     const [columns, setColumns] = useState<KanbanColumn[]>([]);
     const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
@@ -76,6 +76,23 @@ export function useBoards(selectedWorkspace: Workspace | null) {
     }, [selectedWorkspace]);
 
     useEffect(() => {
+        if (realtimeRevision === 0 || !selectedWorkspace) return;
+        const refresh = async () => {
+            try {
+                const nextBoards = await getBoards(selectedWorkspace.id);
+                const nextActiveId = nextBoards.some((board) => board.id === activeBoardId) ? activeBoardId : nextBoards[0]?.id ?? null;
+                setBoards(nextBoards);
+                setActiveBoardId(nextActiveId);
+                setColumns(nextActiveId ? await getColumns(nextActiveId) : []);
+                setError("");
+            } catch (requestError) {
+                setError(getErrorMessage(requestError, "The shared board could not be synchronized."));
+            }
+        };
+        void refresh();
+    }, [activeBoardId, realtimeRevision, selectedWorkspace]);
+
+    useEffect(() => {
         if (!selectedWorkspace) return;
         const refresh = async () => {
             if (document.visibilityState !== "visible") return;
@@ -89,7 +106,7 @@ export function useBoards(selectedWorkspace: Workspace | null) {
                 // The regular action handlers surface errors; background refresh stays quiet.
             }
         };
-        const timer = window.setInterval(() => void refresh(), 10_000);
+        const timer = window.setInterval(() => void refresh(), 60_000);
         return () => window.clearInterval(timer);
     }, [activeBoardId, selectedWorkspace]);
 

@@ -4,25 +4,19 @@ using server.Data;
 using server.Models;
 using Microsoft.AspNetCore.Authorization;
 using server.Auth;
+using server.Realtime;
 
 namespace server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class BoardsController : ControllerBase
+public class BoardsController(AppDbContext context, WorkspaceRealtimeNotifier realtime) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public BoardsController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpGet("{workspaceId}")]
     public async Task<ActionResult<List<Board>>> GetBoards(Guid workspaceId)
     {
-        return await _context.Boards
+        return await context.Boards
             .Where(b => b.WorkspaceId == workspaceId && (b.Workspace!.UserId == User.GetUserId() || b.Workspace.Members.Any(member => member.UserId == User.GetUserId())))
             .ToListAsync();
     }
@@ -30,9 +24,10 @@ public class BoardsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Board>> CreateBoard(Board board)
     {
-        if (!await WorkspaceAuthorization.CanEdit(_context, board.WorkspaceId, User.GetUserId())) return Forbid();
-        _context.Boards.Add(board);
-        await _context.SaveChangesAsync();
+        if (!await WorkspaceAuthorization.CanEdit(context, board.WorkspaceId, User.GetUserId())) return Forbid();
+        context.Boards.Add(board);
+        await context.SaveChangesAsync();
+        await realtime.NotifyAsync(board.WorkspaceId, "board-created", board.Id, HttpContext.RequestAborted);
 
         return Ok(board);
     }
@@ -41,16 +36,17 @@ public class BoardsController : ControllerBase
     public async Task<IActionResult> DeleteBoard(Guid boardId)
     {
         var userId = User.GetUserId();
-        var board = await _context.Boards.SingleOrDefaultAsync(item => item.Id == boardId);
+        var board = await context.Boards.SingleOrDefaultAsync(item => item.Id == boardId);
 
         if (board is null)
         {
             return NotFound();
         }
-        if (!await WorkspaceAuthorization.CanEdit(_context, board.WorkspaceId, userId)) return Forbid();
+        if (!await WorkspaceAuthorization.CanEdit(context, board.WorkspaceId, userId)) return Forbid();
 
-        _context.Boards.Remove(board);
-        await _context.SaveChangesAsync();
+        context.Boards.Remove(board);
+        await context.SaveChangesAsync();
+        await realtime.NotifyAsync(board.WorkspaceId, "board-deleted", boardId, HttpContext.RequestAborted);
 
         return NoContent();
     }

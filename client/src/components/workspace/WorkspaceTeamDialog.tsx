@@ -9,9 +9,9 @@ import {
 } from "../../services/workspaceService";
 import type { Workspace, WorkspaceInvitation, WorkspaceMember } from "../../types/workspace";
 
-type Props = { workspace: Workspace; onClose: () => void };
+type Props = { workspace: Workspace; onClose: () => void; refreshVersion?: number };
 
-export default function WorkspaceTeamDialog({ workspace, onClose }: Props) {
+export default function WorkspaceTeamDialog({ workspace, onClose, refreshVersion = 0 }: Props) {
     const [members, setMembers] = useState<WorkspaceMember[]>([]);
     const [invitations, setInvitations] = useState<WorkspaceInvitation[]>([]);
     const [email, setEmail] = useState("");
@@ -34,7 +34,7 @@ export default function WorkspaceTeamDialog({ workspace, onClose }: Props) {
         }
     }, [isOwner, workspace.id]);
 
-    useEffect(() => { void load(); }, [load]);
+    useEffect(() => { void load(); }, [load, refreshVersion]);
 
     async function invite() {
         if (!email.trim()) return;

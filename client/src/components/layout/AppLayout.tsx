@@ -2,6 +2,7 @@ import { useCallback, useState, type ReactNode } from "react";
 import type { Workspace } from "../../types/workspace";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import type { RealtimeStatus } from "../../realtime/useWorkspaceRealtime";
 
 type AppLayoutProps = {
     children: ReactNode;
@@ -11,9 +12,11 @@ type AppLayoutProps = {
     onLogout: () => void;
     onOpenAccount: () => void;
     onOpenTerminal?: () => void;
+    realtimeStatus: RealtimeStatus;
+    workspaceRefreshVersion: number;
 };
 
-function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLogout, onOpenAccount, onOpenTerminal }: AppLayoutProps) {
+function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLogout, onOpenAccount, onOpenTerminal, realtimeStatus, workspaceRefreshVersion }: AppLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const handleSelectWorkspace = useCallback((workspace: Workspace | null) => {
         onSelectWorkspace(workspace);
@@ -30,6 +33,7 @@ function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLo
                 onLogout={onLogout}
                 onOpenAccount={onOpenAccount}
                 onOpenTerminal={onOpenTerminal}
+                realtimeStatus={realtimeStatus}
             />
 
             <div className="flex flex-1 overflow-hidden">
@@ -45,6 +49,7 @@ function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLo
                     selectedWorkspace={selectedWorkspace}
                     isOpen={isSidebarOpen}
                     onSelectWorkspace={handleSelectWorkspace}
+                    refreshVersion={workspaceRefreshVersion}
                 />
                 <main id="main-content" tabIndex={-1} className="min-h-0 min-w-0 flex-1 overflow-auto p-4 sm:p-6">{children}</main>
             </div>

@@ -5,25 +5,19 @@ using server.Models;
 using Microsoft.AspNetCore.Authorization;
 using server.Auth;
 using server.Contracts;
+using server.Realtime;
 
 namespace server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class CardsController : ControllerBase
+public class CardsController(AppDbContext context, WorkspaceRealtimeNotifier realtime) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public CardsController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpGet("{columnId}")]
     public async Task<ActionResult<List<KanbanCard>>> GetCards(Guid columnId)
     {
-        return await _context.KanbanCards
+        return await context.KanbanCards
             .Where(c => c.KanbanColumnId == columnId && (c.KanbanColumn!.Board!.Workspace!.UserId == User.GetUserId() || c.KanbanColumn.Board.Workspace.Members.Any(member => member.UserId == User.GetUserId())))
             .OrderBy(c => c.Position)
             .ToListAsync();
@@ -32,17 +26,18 @@ public class CardsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<KanbanCard>> CreateCard(KanbanCard card)
     {
-        var workspaceId = await _context.KanbanColumns.Where(column => column.Id == card.KanbanColumnId)
+        var workspaceId = await context.KanbanColumns.Where(column => column.Id == card.KanbanColumnId)
             .Select(column => (Guid?)column.Board!.WorkspaceId).SingleOrDefaultAsync();
 
         if (workspaceId is null)
         {
             return BadRequest("The selected column does not exist.");
         }
-        if (!await WorkspaceAuthorization.CanEdit(_context, workspaceId.Value, User.GetUserId())) return Forbid();
+        if (!await WorkspaceAuthorization.CanEdit(context, workspaceId.Value, User.GetUserId())) return Forbid();
 
-        _context.KanbanCards.Add(card);
-        await _context.SaveChangesAsync();
+        context.KanbanCards.Add(card);
+        await context.SaveChangesAsync();
+        await realtime.NotifyAsync(workspaceId.Value, "card-created", card.Id, HttpContext.RequestAborted);
 
         return Ok(card);
     }
@@ -51,13 +46,13 @@ public class CardsController : ControllerBase
     public async Task<ActionResult<KanbanCard>> UpdateCard(Guid cardId, UpdateCardRequest request)
     {
         var userId = User.GetUserId();
-        var card = await _context.KanbanCards.Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
+        var card = await context.KanbanCards.Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
 
         if (card is null)
         {
             return NotFound();
         }
-        if (!await WorkspaceAuthorization.CanEdit(_context, card.KanbanColumn!.Board!.WorkspaceId, userId)) return Forbid();
+        if (!await WorkspaceAuthorization.CanEdit(context, card.KanbanColumn!.Board!.WorkspaceId, userId)) return Forbid();
 
         if (string.IsNullOrWhiteSpace(request.Title))
         {
@@ -73,7 +68,8 @@ public class CardsController : ControllerBase
             : request.Priority;
         card.DueDate = request.DueDate;
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
+        await realtime.NotifyAsync(card.KanbanColumn.Board.WorkspaceId, "card-updated", card.Id, HttpContext.RequestAborted);
         return Ok(card);
     }
 
@@ -81,16 +77,16 @@ public class CardsController : ControllerBase
     public async Task<ActionResult<KanbanCard>> MoveCard(Guid cardId, MoveCardRequest request)
     {
         var userId = User.GetUserId();
-        var card = await _context.KanbanCards.Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
+        var card = await context.KanbanCards.Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
 
         if (card is null)
         {
             return NotFound();
         }
         var workspaceId = card.KanbanColumn!.Board!.WorkspaceId;
-        if (!await WorkspaceAuthorization.CanEdit(_context, workspaceId, userId)) return Forbid();
+        if (!await WorkspaceAuthorization.CanEdit(context, workspaceId, userId)) return Forbid();
 
-        var targetColumnExists = await _context.KanbanColumns
+        var targetColumnExists = await context.KanbanColumns
             .AnyAsync(column => column.Id == request.KanbanColumnId && column.Board!.WorkspaceId == workspaceId);
 
         if (!targetColumnExists)
@@ -99,7 +95,7 @@ public class CardsController : ControllerBase
         }
 
         var sourceColumnId = card.KanbanColumnId;
-        var sourceCards = await _context.KanbanCards
+        var sourceCards = await context.KanbanCards
             .Where(existingCard =>
                 existingCard.KanbanColumnId == sourceColumnId && existingCard.Id != cardId)
             .OrderBy(existingCard => existingCard.Position)
@@ -107,7 +103,7 @@ public class CardsController : ControllerBase
 
         var targetCards = sourceColumnId == request.KanbanColumnId
             ? sourceCards
-            : await _context.KanbanCards
+            : await context.KanbanCards
                 .Where(existingCard =>
                     existingCard.KanbanColumnId == request.KanbanColumnId && existingCard.Id != cardId)
                 .OrderBy(existingCard => existingCard.Position)
@@ -128,7 +124,8 @@ public class CardsController : ControllerBase
             targetCards[index].Position = index + 1;
         }
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
+        await realtime.NotifyAsync(workspaceId, "card-moved", card.Id, HttpContext.RequestAborted);
         return Ok(card);
     }
 
@@ -136,28 +133,31 @@ public class CardsController : ControllerBase
     public async Task<IActionResult> DeleteCard(Guid cardId)
     {
         var userId = User.GetUserId();
-        var card = await _context.KanbanCards.Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
+        var card = await context.KanbanCards.Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
 
         if (card is null)
         {
             return NotFound();
         }
-        if (!await WorkspaceAuthorization.CanEdit(_context, card.KanbanColumn!.Board!.WorkspaceId, userId)) return Forbid();
+        if (!await WorkspaceAuthorization.CanEdit(context, card.KanbanColumn!.Board!.WorkspaceId, userId)) return Forbid();
 
-        var remainingCards = await _context.KanbanCards
+        var workspaceId = card.KanbanColumn.Board.WorkspaceId;
+
+        var remainingCards = await context.KanbanCards
             .Where(existingCard =>
                 existingCard.KanbanColumnId == card.KanbanColumnId && existingCard.Id != cardId)
             .OrderBy(existingCard => existingCard.Position)
             .ToListAsync();
 
-        _context.KanbanCards.Remove(card);
+        context.KanbanCards.Remove(card);
 
         for (var index = 0; index < remainingCards.Count; index++)
         {
             remainingCards[index].Position = index + 1;
         }
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
+        await realtime.NotifyAsync(workspaceId, "card-deleted", cardId, HttpContext.RequestAborted);
         return NoContent();
     }
 }

@@ -23,6 +23,7 @@ describe("accessibility", () => {
                 onMenuClick={() => undefined}
                 onLogout={() => undefined}
                 onOpenAccount={() => undefined}
+                realtimeStatus="live"
             />
         );
 
