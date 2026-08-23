@@ -21,8 +21,11 @@ function Header({ email, isSidebarOpen, onMenuClick, onLogout, onOpenAccount, on
                 >
                     <span aria-hidden="true">☰</span>
                 </button>
-                <span className="brand-medallion" aria-hidden="true">SM</span>
-                <p className="mahogany-title text-sm sm:text-lg">SWEET MAHOGANY <span className="hidden sm:inline">BOARDS</span></p>
+                <img
+                    src="/branding/sweet-mahogany-logo-v1.png"
+                    alt="Sweet Mahogany Boards"
+                    className="brand-logo brand-logo-header"
+                />
             </div>
 
             <div className="flex min-w-0 items-center gap-2 sm:gap-4">

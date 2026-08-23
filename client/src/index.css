@@ -153,6 +153,26 @@ button {
   letter-spacing: -0.06em;
 }
 
+.brand-logo {
+  display: block;
+  height: auto;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.brand-logo-header {
+  width: clamp(8.5rem, 18vw, 13rem);
+  max-height: 3.25rem;
+  filter: drop-shadow(0 3px 7px rgb(0 0 0 / 35%));
+}
+
+.brand-logo-auth {
+  width: min(100%, 22rem);
+  max-height: 8rem;
+  margin-inline: auto;
+  filter: drop-shadow(0 7px 16px rgb(0 0 0 / 40%));
+}
+
 .mahogany-title {
   color: #fff8f1;
   font-family: Georgia, "Times New Roman", serif;

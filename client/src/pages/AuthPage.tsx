@@ -82,7 +82,11 @@ function AuthPage({ onAuthenticated, onOpenTerminal }: AuthPageProps) {
     return (
         <main className="mahogany-shell flex min-h-screen items-center justify-center bg-slate-950 p-4 text-white sm:p-6">
             <form onSubmit={handleSubmit} aria-describedby={error ? "auth-error" : message ? "auth-message" : undefined} className="mahogany-auth-panel w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl sm:p-8">
-                <div className="mb-5 flex items-center gap-3"><span className="brand-medallion" aria-hidden="true">SM</span><p className="mahogany-title text-sm text-amber-500">SWEET MAHOGANY BOARDS</p></div>
+                <img
+                    src="/branding/sweet-mahogany-logo-v1.png"
+                    alt="Sweet Mahogany Boards"
+                    className="brand-logo brand-logo-auth mb-6"
+                />
                 <h1 className="mb-6 text-3xl font-bold">{verificationToken && isSubmitting ? "Verifying your email…" : title}</h1>
 
                 {mode !== "reset" && !verificationToken && (
