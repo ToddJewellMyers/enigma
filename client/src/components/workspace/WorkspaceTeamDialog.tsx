@@ -70,7 +70,7 @@ export default function WorkspaceTeamDialog({ workspace, onClose }: Props) {
     }
 
     return <div role="dialog" aria-modal="true" aria-labelledby="team-dialog-title" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4">
-        <section className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl sm:p-7">
+        <section className="mahogany-modal max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl sm:p-7">
             <div className="flex items-start justify-between gap-4">
                 <div><p className="text-sm text-blue-300">{workspace.name}</p><h2 id="team-dialog-title" className="text-2xl font-bold text-white">Workspace team</h2></div>
                 <button type="button" onClick={onClose} aria-label="Close team settings" className="rounded-lg px-3 py-1 text-2xl text-slate-400 hover:bg-slate-800 hover:text-white">×</button>

@@ -85,10 +85,11 @@ function Sidebar({
     }, [selectedWorkspace]);
 
     return (
-        <aside id="workspace-sidebar" aria-label="Workspace navigation" className={`fixed inset-y-16 left-0 z-40 flex w-[min(20rem,85vw)] flex-col border-r border-slate-800 bg-slate-900 p-5 transition-transform lg:static lg:inset-auto lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <aside id="workspace-sidebar" aria-label="Workspace navigation" className={`mahogany-sidebar fixed inset-y-16 left-0 z-40 flex w-[min(20rem,85vw)] flex-col border-r border-slate-800 bg-slate-900 p-5 transition-transform lg:static lg:inset-auto lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
             <h2 className="mb-5 text-xs font-bold uppercase tracking-widest text-slate-400">
                 Workspaces
             </h2>
+            <div className="brass-rule mb-4" />
 
             <nav className="flex flex-col gap-2">
                 {workspaces.map((workspace) => (

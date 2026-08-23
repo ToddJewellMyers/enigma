@@ -9,7 +9,7 @@ type HeaderProps = {
 
 function Header({ email, isSidebarOpen, onMenuClick, onLogout, onOpenAccount, onOpenTerminal }: HeaderProps) {
     return (
-        <header className="z-40 flex h-16 shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900 px-4 sm:px-6">
+        <header className="mahogany-header z-40 flex h-16 shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900 px-4 sm:px-6">
             <div className="flex items-center gap-3">
                 <button
                     type="button"
@@ -21,9 +21,8 @@ function Header({ email, isSidebarOpen, onMenuClick, onLogout, onOpenAccount, on
                 >
                     <span aria-hidden="true">☰</span>
                 </button>
-                <p className="text-base font-bold tracking-[0.12em] text-white sm:text-xl">
-                SWEET MAHOGANY BOARDS
-                </p>
+                <span className="brand-medallion" aria-hidden="true">SM</span>
+                <p className="mahogany-title text-sm sm:text-lg">SWEET MAHOGANY <span className="hidden sm:inline">BOARDS</span></p>
             </div>
 
             <div className="flex min-w-0 items-center gap-2 sm:gap-4">

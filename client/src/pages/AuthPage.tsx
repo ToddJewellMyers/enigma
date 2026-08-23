@@ -80,9 +80,9 @@ function AuthPage({ onAuthenticated, onOpenTerminal }: AuthPageProps) {
     const title = mode === "register" ? "Create account" : mode === "forgot" ? "Reset your password" : mode === "reset" ? "Choose a new password" : "Welcome back";
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-slate-950 p-4 text-white sm:p-6">
-            <form onSubmit={handleSubmit} aria-describedby={error ? "auth-error" : message ? "auth-message" : undefined} className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl sm:p-8">
-                <p className="mb-2 text-sm font-bold tracking-[0.18em] text-amber-500">SWEET MAHOGANY BOARDS</p>
+        <main className="mahogany-shell flex min-h-screen items-center justify-center bg-slate-950 p-4 text-white sm:p-6">
+            <form onSubmit={handleSubmit} aria-describedby={error ? "auth-error" : message ? "auth-message" : undefined} className="mahogany-auth-panel w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl sm:p-8">
+                <div className="mb-5 flex items-center gap-3"><span className="brand-medallion" aria-hidden="true">SM</span><p className="mahogany-title text-sm text-amber-500">SWEET MAHOGANY BOARDS</p></div>
                 <h1 className="mb-6 text-3xl font-bold">{verificationToken && isSubmitting ? "Verifying your email…" : title}</h1>
 
                 {mode !== "reset" && !verificationToken && (

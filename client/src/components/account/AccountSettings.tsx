@@ -42,7 +42,7 @@ function AccountSettings({ email, onClose, onDeleted }: AccountSettingsProps) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="account-settings-title">
-            <div className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+            <div className="mahogany-modal max-h-[90vh] w-full max-w-lg overflow-auto rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
                 <div className="mb-6 flex items-start justify-between gap-4">
                     <div>
                         <h2 id="account-settings-title" className="text-2xl font-bold">Account settings</h2>
