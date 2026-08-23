@@ -77,6 +77,13 @@ function Sidebar({
         void loadInitialWorkspaces();
     }, [onSelectWorkspace]);
 
+    useEffect(() => {
+        if (!selectedWorkspace) return;
+        setWorkspaces((current) => current.some((workspace) => workspace.id === selectedWorkspace.id)
+            ? current.map((workspace) => workspace.id === selectedWorkspace.id ? selectedWorkspace : workspace)
+            : [...current, selectedWorkspace]);
+    }, [selectedWorkspace]);
+
     return (
         <aside id="workspace-sidebar" aria-label="Workspace navigation" className={`fixed inset-y-16 left-0 z-40 flex w-[min(20rem,85vw)] flex-col border-r border-slate-800 bg-slate-900 p-5 transition-transform lg:static lg:inset-auto lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
             <h2 className="mb-5 text-xs font-bold uppercase tracking-widest text-slate-400">
@@ -97,15 +104,16 @@ function Sidebar({
                             className="min-w-0 flex-1 px-3 py-2 text-left text-sm"
                         >
                             <span className="block truncate">{workspace.name}</span>
+                            <span className="block text-[10px] opacity-70">{workspace.role}{workspace.memberCount > 1 ? ` · ${workspace.memberCount} members` : ""}</span>
                         </button>
-                        <button
+                        {workspace.role === "Owner" && <button
                             onClick={() => handleDeleteWorkspace(workspace)}
                             aria-label={`Delete workspace ${workspace.name}`}
                             title="Delete workspace"
                             className="mr-1 rounded px-2 py-1 text-sm transition hover:bg-red-500/20 hover:text-red-300 lg:opacity-0 lg:focus:opacity-100 lg:group-hover:opacity-100"
                         >
                             ×
-                        </button>
+                        </button>}
                     </div>
                 ))}
             </nav>

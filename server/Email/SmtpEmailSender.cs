@@ -27,6 +27,11 @@ public sealed class SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEm
         "Reset your Sweet Mahogany Boards password",
         $"Reset your Sweet Mahogany Boards password by opening this link:\n\n{resetUrl}\n\nThis link expires in one hour. If you did not request this, you can ignore this email.");
 
+    public Task SendWorkspaceInvitationAsync(string recipient, string workspaceName, string inviterEmail, string invitationUrl, string role) => SendAsync(
+        recipient,
+        $"Join {workspaceName} in Sweet Mahogany Boards",
+        $"{inviterEmail} invited you to collaborate as a {role} in the {workspaceName} workspace.\n\nAccept the invitation:\n{invitationUrl}\n\nSign in or create an account using this email address. This invitation expires in seven days.");
+
     private async Task SendAsync(string recipient, string subject, string body)
     {
         if (!IsConfigured)

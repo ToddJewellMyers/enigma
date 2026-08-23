@@ -7,6 +7,7 @@ public sealed class TestEmailSender : IEmailSender
     public bool IsConfigured => true;
     public Dictionary<string, string> VerificationUrls { get; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, string> ResetUrls { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, string> InvitationUrls { get; } = new(StringComparer.OrdinalIgnoreCase);
 
     public Task SendEmailVerificationAsync(string recipient, string verificationUrl)
     {
@@ -17,6 +18,12 @@ public sealed class TestEmailSender : IEmailSender
     public Task SendPasswordResetAsync(string recipient, string resetUrl)
     {
         ResetUrls[recipient] = resetUrl;
+        return Task.CompletedTask;
+    }
+
+    public Task SendWorkspaceInvitationAsync(string recipient, string workspaceName, string inviterEmail, string invitationUrl, string role)
+    {
+        InvitationUrls[recipient] = invitationUrl;
         return Task.CompletedTask;
     }
 }

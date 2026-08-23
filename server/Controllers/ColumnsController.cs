@@ -23,7 +23,7 @@ public class ColumnsController : ControllerBase
     public async Task<ActionResult<List<KanbanColumn>>> GetColumns(Guid boardId)
     {
         return await _context.KanbanColumns
-            .Where(c => c.BoardId == boardId && c.Board!.Workspace!.UserId == User.GetUserId())
+            .Where(c => c.BoardId == boardId && (c.Board!.Workspace!.UserId == User.GetUserId() || c.Board.Workspace.Members.Any(member => member.UserId == User.GetUserId())))
             .OrderBy(c => c.Position)
             .ToListAsync();
     }
@@ -31,8 +31,9 @@ public class ColumnsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<KanbanColumn>> CreateColumn(KanbanColumn column)
     {
-        var ownsBoard = await _context.Boards.AnyAsync(board => board.Id == column.BoardId && board.Workspace!.UserId == User.GetUserId());
-        if (!ownsBoard) return NotFound();
+        var workspaceId = await _context.Boards.Where(board => board.Id == column.BoardId).Select(board => (Guid?)board.WorkspaceId).SingleOrDefaultAsync();
+        if (workspaceId is null) return NotFound();
+        if (!await WorkspaceAuthorization.CanEdit(_context, workspaceId.Value, User.GetUserId())) return Forbid();
         _context.KanbanColumns.Add(column);
         await _context.SaveChangesAsync();
 

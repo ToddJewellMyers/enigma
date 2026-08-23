@@ -24,6 +24,15 @@ public static class NewUserSeeder
             Workspace = workspace
         };
 
+        workspace.Members.Add(new WorkspaceMember
+        {
+            WorkspaceId = workspace.Id,
+            Workspace = workspace,
+            UserId = user.Id,
+            User = user,
+            Role = WorkspaceRoles.Owner
+        });
+
         var toDo = CreateColumn(board, "To Do", 1);
         var inProgress = CreateColumn(board, "In Progress", 2);
         var done = CreateColumn(board, "Done", 3);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { forgotPassword, login, register, resetPassword, verifyEmail } from "../services/authService";
 import { getErrorMessage } from "../api/errorMessage";
 
@@ -20,9 +20,11 @@ function AuthPage({ onAuthenticated, onOpenTerminal }: AuthPageProps) {
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(Boolean(verificationToken));
+    const verificationAttempted = useRef(false);
 
     useEffect(() => {
-        if (!verificationToken) return;
+        if (!verificationToken || verificationAttempted.current) return;
+        verificationAttempted.current = true;
         verifyEmail(verificationToken)
             .then((response) => {
                 window.history.replaceState({}, "", window.location.pathname);

@@ -11,10 +11,10 @@ public abstract class WorkflowTestBase(KanbanApiFactory factory)
     protected KanbanApiFactory Factory { get; } = factory;
     protected static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    protected async Task<HttpClient> CreateAuthenticatedClient()
+    protected async Task<HttpClient> CreateAuthenticatedClient(string? email = null)
     {
         var client = Factory.CreateClient();
-        var email = $"test-{Guid.NewGuid()}@example.com";
+        email ??= $"test-{Guid.NewGuid()}@example.com";
         var registration = await client.PostAsJsonAsync("/api/auth/register", new { email, password = "TestPassword123!" });
         Assert.Equal(HttpStatusCode.Accepted, registration.StatusCode);
         var token = GetQueryValue(Factory.EmailSender.VerificationUrls[email], "verifyToken");
@@ -40,7 +40,8 @@ public abstract class WorkflowTestBase(KanbanApiFactory factory)
     }
 
     protected record AuthResponse(string Token, string Email);
-    protected record WorkspaceDto(Guid Id, string Name);
+    protected record WorkspaceDto(Guid Id, string Name, string Role = "Owner", int MemberCount = 1);
+    protected record WorkspaceMemberDto(Guid UserId, string Email, string Role, DateTime JoinedAt);
     protected record BoardDto(Guid Id, Guid WorkspaceId, string Name);
     protected record ColumnDto(Guid Id, Guid BoardId, string Name, int Position);
     protected record CardDto(Guid Id, Guid KanbanColumnId, string Title, int Position, string Priority);

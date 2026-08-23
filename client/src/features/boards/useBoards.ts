@@ -75,5 +75,23 @@ export function useBoards(selectedWorkspace: Workspace | null) {
         void load();
     }, [selectedWorkspace]);
 
+    useEffect(() => {
+        if (!selectedWorkspace) return;
+        const refresh = async () => {
+            if (document.visibilityState !== "visible") return;
+            try {
+                const nextBoards = await getBoards(selectedWorkspace.id);
+                const nextActiveId = nextBoards.some((board) => board.id === activeBoardId) ? activeBoardId : nextBoards[0]?.id ?? null;
+                setBoards(nextBoards);
+                setActiveBoardId(nextActiveId);
+                setColumns(nextActiveId ? await getColumns(nextActiveId) : []);
+            } catch {
+                // The regular action handlers surface errors; background refresh stays quiet.
+            }
+        };
+        const timer = window.setInterval(() => void refresh(), 10_000);
+        return () => window.clearInterval(timer);
+    }, [activeBoardId, selectedWorkspace]);
+
     return { boards, columns, activeBoardId, activeBoard: boards.find((board) => board.id === activeBoardId), error, addBoard, removeBoard, selectBoard };
 }

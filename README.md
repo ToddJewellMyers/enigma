@@ -202,6 +202,16 @@ Example files are provided at `.env.example`, `client/.env.example`, and `server
 
 Use the left sidebar to select a workspace. Enter a name at the bottom of the sidebar and select **+ Workspace** to create one. Use the delete control beside a workspace to remove it and everything inside it.
 
+### Team collaboration
+
+Open a workspace and select **Team** to invite a collaborator by email. Every person uses their own verified account:
+
+- **Owner** can manage members, change roles, edit all content, and delete the workspace.
+- **Editor** can create, edit, move, and delete boards, columns, and cards.
+- **Viewer** can open all workspace boards and cards without changing them.
+
+Invitation links expire after seven days and must be accepted by an account using the invited email address. Pending invitations and active members appear in the Team dialog. Owners can promote, restrict, or remove collaborators at any time. Board and card data refresh automatically while the application is visible, allowing teammates on desktop and iPad browsers to see each other's changes within a few seconds.
+
 ### Boards
 
 Select a workspace, enter a board name, and select **+ Board**. New boards receive five workflow columns automatically. Use the board tabs to switch boards or the delete control to remove a board.
@@ -241,6 +251,12 @@ Authorization: Bearer <token>
 | `GET` | `/api/workspaces` | List the current user's workspaces |
 | `POST` | `/api/workspaces` | Create a workspace |
 | `DELETE` | `/api/workspaces/{workspaceId}` | Delete a workspace and descendants |
+| `GET` | `/api/workspaces/{workspaceId}/members` | List workspace members |
+| `GET` | `/api/workspaces/{workspaceId}/invitations` | List pending invitations (owner) |
+| `POST` | `/api/workspaces/{workspaceId}/invitations` | Invite an editor or viewer (owner) |
+| `POST` | `/api/workspaces/invitations/accept` | Accept an invitation using its token |
+| `PATCH` | `/api/workspaces/{workspaceId}/members/{userId}` | Change a member role (owner) |
+| `DELETE` | `/api/workspaces/{workspaceId}/members/{userId}` | Remove a member (owner) |
 | `GET` | `/api/boards/{workspaceId}` | List boards in an owned workspace |
 | `POST` | `/api/boards` | Create a board |
 | `DELETE` | `/api/boards/{boardId}` | Delete a board and descendants |
@@ -284,9 +300,9 @@ npm run build
 npx playwright test --list
 ```
 
-The API integration suite covers health, authentication, onboarding data, workspace lifecycle, board lifecycle, ordered columns, card creation, editing, movement, and deletion. It uses an isolated in-memory database and never changes PostgreSQL data.
+The API integration suite covers health, authentication, onboarding data, workspace lifecycle, invitation acceptance, owner/editor/viewer authorization, member removal, board lifecycle, ordered columns, card creation, editing, movement, and deletion. It uses an isolated in-memory database and never changes PostgreSQL data.
 
-The client suite includes automated accessibility checks using Testing Library and `jest-axe`. The Playwright release test runs against real PostgreSQL and a captured SMTP inbox in CI, verifying registration, email verification, workspace/board/card creation, data export, and account deletion through Chromium.
+The client suite includes collaboration component tests and automated accessibility checks using Testing Library and `jest-axe`. The Playwright release test runs against real PostgreSQL and a captured SMTP inbox in CI, verifying two-account registration, email verification, workspace invitations, shared card creation, data export, and account deletion through Chromium.
 
 GitHub Actions runs frontend lint/build/tests, backend integration tests, migration-script generation, the Playwright browser workflow, an npm vulnerability audit, and a complete production Docker build on every pull request and every push to `main`. Dependabot checks npm, NuGet, and GitHub Actions dependencies weekly.
 

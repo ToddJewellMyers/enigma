@@ -1,19 +1,42 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppLayout from "../components/layout/AppLayout";
 import Board from "../components/board/Board";
 import type { Workspace } from "../types/workspace";
 import AccountSettings from "../components/account/AccountSettings";
+import WorkspaceTeamDialog from "../components/workspace/WorkspaceTeamDialog";
+import { acceptWorkspaceInvitation } from "../services/workspaceService";
+import { getErrorMessage } from "../api/errorMessage";
 
 type DashboardProps = {
     email: string;
     onLogout: () => void;
     onAccountDeleted: () => void;
     onOpenTerminal?: () => void;
+    inviteToken: string | null;
+    onInviteHandled: () => void;
 };
 
-function Dashboard({ email, onLogout, onAccountDeleted, onOpenTerminal }: DashboardProps) {
+function Dashboard({ email, inviteToken, onInviteHandled, onLogout, onAccountDeleted, onOpenTerminal }: DashboardProps) {
     const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
     const [isAccountOpen, setIsAccountOpen] = useState(false);
+    const [isTeamOpen, setIsTeamOpen] = useState(false);
+    const [notice, setNotice] = useState("");
+    const invitationAttempted = useRef(false);
+
+    useEffect(() => {
+        if (!inviteToken || invitationAttempted.current) return;
+        invitationAttempted.current = true;
+        acceptWorkspaceInvitation(inviteToken).then((workspace) => {
+            setSelectedWorkspace(workspace);
+            setNotice(`You joined ${workspace.name}.`);
+            localStorage.removeItem("workspace_invite_token");
+            window.history.replaceState({}, "", window.location.pathname);
+            onInviteHandled();
+        }).catch((requestError: unknown) => {
+            setNotice(getErrorMessage(requestError, "The workspace invitation could not be accepted."));
+            onInviteHandled();
+        });
+    }, [inviteToken, onInviteHandled]);
 
     return (
         <AppLayout
@@ -24,8 +47,10 @@ function Dashboard({ email, onLogout, onAccountDeleted, onOpenTerminal }: Dashbo
             onOpenAccount={() => setIsAccountOpen(true)}
             onOpenTerminal={onOpenTerminal}
         >
-            <Board selectedWorkspace={selectedWorkspace} />
+            {notice && <p role="status" className="mb-4 rounded-lg border border-blue-800 bg-blue-950/40 p-3 text-sm text-blue-200">{notice}</p>}
+            <Board selectedWorkspace={selectedWorkspace} onOpenTeam={() => setIsTeamOpen(true)} />
             {isAccountOpen && <AccountSettings email={email} onClose={() => setIsAccountOpen(false)} onDeleted={onAccountDeleted} />}
+            {isTeamOpen && selectedWorkspace && <WorkspaceTeamDialog workspace={selectedWorkspace} onClose={() => setIsTeamOpen(false)} />}
         </AppLayout>
     );
 }

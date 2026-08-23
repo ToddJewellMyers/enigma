@@ -20,4 +20,10 @@ public class Workspace
 
     [JsonIgnore]
     public List<Board> Boards { get; set; } = new();
+
+    [JsonIgnore]
+    public List<WorkspaceMember> Members { get; set; } = new();
+
+    [JsonIgnore]
+    public List<WorkspaceInvitation> Invitations { get; set; } = new();
 }
