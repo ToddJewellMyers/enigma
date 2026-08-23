@@ -74,7 +74,7 @@ public class WorkflowTests(KanbanApiFactory factory) : WorkflowTestBase(factory)
         var done = await CreateAsync<ColumnDto>(client, "/api/columns", new { boardId = board.Id, name = "Done", position = 2 });
         var first = await CreateAsync<CardDto>(client, "/api/cards", new { kanbanColumnId = backlog.Id, title = "First", position = 1, priority = "Normal" });
         var second = await CreateAsync<CardDto>(client, "/api/cards", new { kanbanColumnId = backlog.Id, title = "Second", position = 2, priority = "High" });
-        (await client.PutAsJsonAsync($"/api/cards/{first.Id}", new { title = "First updated", description = "Verified", priority = "Urgent", dueDate = "2026-08-01T00:00:00Z" })).EnsureSuccessStatusCode();
+        (await client.PutAsJsonAsync($"/api/cards/{first.Id}", new { title = "First updated", description = "Verified", priority = "Urgent", dueDate = "2026-08-01" })).EnsureSuccessStatusCode();
         (await client.PutAsJsonAsync($"/api/cards/{second.Id}/move", new { kanbanColumnId = done.Id, position = 1 })).EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/api/cards/{second.Id}")).StatusCode);
         Assert.Empty((await client.GetFromJsonAsync<List<CardDto>>($"/api/cards/{done.Id}", JsonOptions))!);

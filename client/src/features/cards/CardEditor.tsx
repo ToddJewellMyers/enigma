@@ -15,7 +15,12 @@ export default function CardEditor({ card, onCancel, onSave }: CardEditorProps) 
         if (!title.trim()) return;
         setIsSaving(true);
         try {
-            await onSave({ title: title.trim(), description: description.trim() || undefined, priority, dueDate: dueDate || undefined });
+            await onSave({
+                title: title.trim(),
+                description: description.trim() || undefined,
+                priority,
+                dueDate: dueDate ? `${dueDate}T00:00:00.000Z` : undefined,
+            });
         } finally { setIsSaving(false); }
     }
 

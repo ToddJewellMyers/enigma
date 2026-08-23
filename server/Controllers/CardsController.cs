@@ -66,7 +66,11 @@ public class CardsController(AppDbContext context, WorkspaceRealtimeNotifier rea
         card.Priority = string.IsNullOrWhiteSpace(request.Priority)
             ? "Normal"
             : request.Priority;
-        card.DueDate = request.DueDate;
+        card.DueDate = request.DueDate is { } dueDate
+            ? dueDate.Kind == DateTimeKind.Utc
+                ? dueDate
+                : DateTime.SpecifyKind(dueDate, DateTimeKind.Utc)
+            : null;
 
         await context.SaveChangesAsync();
         await realtime.NotifyAsync(card.KanbanColumn.Board.WorkspaceId, "card-updated", card.Id, HttpContext.RequestAborted);
