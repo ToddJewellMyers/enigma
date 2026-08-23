@@ -34,4 +34,29 @@ public class ColumnsController(AppDbContext context, WorkspaceRealtimeNotifier r
 
         return Ok(column);
     }
+
+    [HttpDelete("{columnId}")]
+    public async Task<IActionResult> DeleteColumn(Guid columnId)
+    {
+        var column = await context.KanbanColumns
+            .Include(item => item.Board)
+            .SingleOrDefaultAsync(item => item.Id == columnId);
+        if (column is null) return NotFound();
+
+        var workspaceId = column.Board!.WorkspaceId;
+        if (!await WorkspaceAuthorization.CanEdit(context, workspaceId, User.GetUserId())) return Forbid();
+
+        var remainingColumns = await context.KanbanColumns
+            .Where(item => item.BoardId == column.BoardId && item.Id != columnId)
+            .OrderBy(item => item.Position)
+            .ToListAsync();
+
+        context.KanbanColumns.Remove(column);
+        for (var index = 0; index < remainingColumns.Count; index++)
+            remainingColumns[index].Position = index + 1;
+
+        await context.SaveChangesAsync();
+        await realtime.NotifyAsync(workspaceId, "column-deleted", columnId, HttpContext.RequestAborted);
+        return NoContent();
+    }
 }

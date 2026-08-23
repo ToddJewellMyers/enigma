@@ -56,6 +56,12 @@ public class WorkflowTests(KanbanApiFactory factory) : WorkflowTestBase(factory)
         await CreateAsync<ColumnDto>(client, "/api/columns", new { boardId = board.Id, name = "Ready", position = 1 });
         var columns = await client.GetFromJsonAsync<List<ColumnDto>>($"/api/columns/{board.Id}", JsonOptions);
         Assert.Equal(new[] { "Ready", "Done" }, columns!.Select(column => column.Name));
+        var ready = columns!.Single(column => column.Name == "Ready");
+        Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/api/columns/{ready.Id}")).StatusCode);
+        columns = await client.GetFromJsonAsync<List<ColumnDto>>($"/api/columns/{board.Id}", JsonOptions);
+        var remaining = Assert.Single(columns!);
+        Assert.Equal("Done", remaining.Name);
+        Assert.Equal(1, remaining.Position);
     }
 
     [Fact]

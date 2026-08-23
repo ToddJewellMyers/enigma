@@ -3,7 +3,7 @@ import type { Workspace } from "../../types/workspace";
 import type { Board } from "../../types/board";
 import type { KanbanColumn } from "../../types/column";
 import { createBoard, deleteBoard, getBoards } from "../../services/boardService";
-import { createColumn, getColumns } from "../../services/columnService";
+import { createColumn, deleteColumn, getColumns } from "../../services/columnService";
 import { getErrorMessage } from "../../api/errorMessage";
 
 const defaultColumns = ["Backlog", "Ready", "In Progress", "Testing", "Done"];
@@ -50,6 +50,29 @@ export function useBoards(selectedWorkspace: Workspace | null, realtimeRevision:
             setColumns(next ? await getColumns(next.id) : []);
         } catch (requestError) {
             setError(getErrorMessage(requestError, "The board could not be deleted."));
+        }
+    }
+
+    async function addColumn(name: string) {
+        if (!activeBoardId) return;
+        try {
+            setError("");
+            await createColumn(activeBoardId, name, columns.length + 1);
+            setColumns(await getColumns(activeBoardId));
+        } catch (requestError) {
+            setError(getErrorMessage(requestError, "The column could not be created."));
+            throw requestError;
+        }
+    }
+
+    async function removeColumn(column: KanbanColumn) {
+        try {
+            setError("");
+            await deleteColumn(column.id);
+            setColumns((current) => current.filter((item) => item.id !== column.id)
+                .map((item, index) => ({ ...item, position: index + 1 })));
+        } catch (requestError) {
+            setError(getErrorMessage(requestError, "The column could not be deleted."));
         }
     }
 
@@ -110,5 +133,5 @@ export function useBoards(selectedWorkspace: Workspace | null, realtimeRevision:
         return () => window.clearInterval(timer);
     }, [activeBoardId, selectedWorkspace]);
 
-    return { boards, columns, activeBoardId, activeBoard: boards.find((board) => board.id === activeBoardId), error, addBoard, removeBoard, selectBoard };
+    return { boards, columns, activeBoardId, activeBoard: boards.find((board) => board.id === activeBoardId), error, addBoard, removeBoard, addColumn, removeColumn, selectBoard };
 }
