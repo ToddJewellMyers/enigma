@@ -18,4 +18,6 @@ export interface WorkspaceInvitation {
     email: string;
     role: "Editor" | "Viewer";
     expiresAt: string;
+    inviteUrl?: string;
+    emailSent?: boolean;
 }

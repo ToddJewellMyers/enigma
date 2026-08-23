@@ -87,18 +87,17 @@ public class WorkspacesController(AppDbContext context, IConfiguration configura
         await context.SaveChangesAsync();
         var publicUrl = configuration["PublicAppUrl"]?.TrimEnd('/') ?? throw new InvalidOperationException("PublicAppUrl is missing.");
         var invitationUrl = $"{publicUrl}/?inviteToken={Uri.EscapeDataString(token)}";
+        var emailSent = true;
         try
         {
             await emailSender.SendWorkspaceInvitationAsync(email, workspace.Name, User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "A teammate", invitationUrl, request.Role);
         }
         catch
         {
-            context.WorkspaceInvitations.Remove(invitation);
-            await context.SaveChangesAsync();
-            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, detail: "The invitation email could not be sent. Please try again later.");
+            emailSent = false;
         }
         await realtime.NotifyAsync(workspaceId, "invitation-created", invitation.Id, HttpContext.RequestAborted);
-        return Ok(new WorkspaceInvitationResponse(invitation.Id, invitation.Email, invitation.Role, invitation.ExpiresAt));
+        return Ok(new WorkspaceInvitationResponse(invitation.Id, invitation.Email, invitation.Role, invitation.ExpiresAt, invitationUrl, emailSent));
     }
 
     [HttpPost("invitations/accept")]

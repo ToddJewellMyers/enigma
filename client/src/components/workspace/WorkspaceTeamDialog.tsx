@@ -17,6 +17,8 @@ export default function WorkspaceTeamDialog({ workspace, onClose, refreshVersion
     const [email, setEmail] = useState("");
     const [role, setRole] = useState<"Editor" | "Viewer">("Editor");
     const [error, setError] = useState("");
+    const [inviteLink, setInviteLink] = useState("");
+    const [notice, setNotice] = useState("");
     const [busy, setBusy] = useState(false);
     const isOwner = workspace.role === "Owner";
 
@@ -39,14 +41,31 @@ export default function WorkspaceTeamDialog({ workspace, onClose, refreshVersion
     async function invite() {
         if (!email.trim()) return;
         setBusy(true);
+        setError("");
+        setNotice("");
+        setInviteLink("");
         try {
-            await inviteWorkspaceMember(workspace.id, email.trim(), role);
+            const invitation = await inviteWorkspaceMember(workspace.id, email.trim(), role);
+            setInviteLink(invitation.inviteUrl ?? "");
+            setNotice(invitation.emailSent === false
+                ? "Gmail could not send the message, but the invitation is active. Copy the link and send it to your teammate."
+                : "Invitation sent. You can also copy the link below.");
             setEmail("");
             await load();
         } catch (requestError) {
             setError(getErrorMessage(requestError, "The invitation could not be sent."));
         } finally {
             setBusy(false);
+        }
+    }
+
+    async function copyInviteLink() {
+        try {
+            await navigator.clipboard.writeText(inviteLink);
+            setNotice("Invitation link copied. Send it privately to your teammate.");
+            setError("");
+        } catch {
+            setError("The link could not be copied automatically. Select and copy it below.");
         }
     }
 
@@ -87,6 +106,13 @@ export default function WorkspaceTeamDialog({ workspace, onClose, refreshVersion
             </div>}
 
             {error && <p role="alert" className="mt-4 rounded-lg bg-red-950/50 p-3 text-sm text-red-300">{error}</p>}
+            {inviteLink && <div className="mt-4 rounded-lg border border-amber-700/60 bg-amber-950/30 p-3">
+                <p role="status" className="text-sm text-amber-100">{notice}</p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                    <input readOnly value={inviteLink} aria-label="Invitation link" className="min-w-0 flex-1 rounded border border-amber-800 bg-slate-950 px-3 py-2 text-xs text-amber-100" />
+                    <button type="button" onClick={() => void copyInviteLink()} className="rounded bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600">Copy invite link</button>
+                </div>
+            </div>}
 
             <div className="mt-6">
                 <h3 className="font-semibold text-white">Members</h3>

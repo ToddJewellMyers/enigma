@@ -45,4 +45,23 @@ describe("workspace collaboration", () => {
         await waitFor(() => expect(workspaceService.getWorkspaceMembers).toHaveBeenCalled());
         expect(screen.queryByRole("button", { name: "Send invite" })).toBeNull();
     });
+
+    it("shows a copyable link when invitation email delivery fails", async () => {
+        vi.mocked(workspaceService.getWorkspaceMembers).mockResolvedValue([]);
+        vi.mocked(workspaceService.getWorkspaceInvitations).mockResolvedValue([]);
+        vi.mocked(workspaceService.inviteWorkspaceMember).mockResolvedValue({
+            id: "invite-id", email: "partner@example.com", role: "Editor", expiresAt: "2026-08-30T00:00:00Z",
+            inviteUrl: "https://example.com/?inviteToken=secret", emailSent: false,
+        });
+
+        render(<WorkspaceTeamDialog workspace={{
+            id: "workspace-id", name: "Shared Project", createdAt: "2026-08-23T00:00:00Z", role: "Owner", memberCount: 1,
+        }} onClose={() => undefined} />);
+
+        fireEvent.change(await screen.findByLabelText("Teammate email"), { target: { value: "partner@example.com" } });
+        fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+
+        expect(await screen.findByRole("button", { name: "Copy invite link" })).toBeTruthy();
+        expect((screen.getByLabelText("Invitation link") as HTMLInputElement).value).toContain("inviteToken=");
+    });
 });
