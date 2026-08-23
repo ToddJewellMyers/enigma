@@ -35,6 +35,7 @@ export type CardUpdate = {
     description?: string;
     priority: string;
     dueDate?: string;
+    assigneeUserId?: string;
 };
 
 export async function updateCard(cardId: string, update: CardUpdate) {

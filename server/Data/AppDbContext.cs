@@ -37,5 +37,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<WorkspaceInvitation>()
             .HasOne(invitation => invitation.InvitedByUser).WithMany()
             .HasForeignKey(invitation => invitation.InvitedByUserId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<KanbanCard>()
+            .HasOne(card => card.Assignee).WithMany()
+            .HasForeignKey(card => card.AssigneeUserId).OnDelete(DeleteBehavior.SetNull);
     }
 }

@@ -143,6 +143,10 @@ public class WorkspacesController(AppDbContext context, IConfiguration configura
         var member = await context.WorkspaceMembers.SingleOrDefaultAsync(item => item.WorkspaceId == workspaceId && item.UserId == memberUserId);
         if (member is null) return NotFound();
         if (member.Role == WorkspaceRoles.Owner) return BadRequest("The workspace owner cannot be removed.");
+        var assignedCards = await context.KanbanCards
+            .Where(card => card.AssigneeUserId == memberUserId && card.KanbanColumn!.Board!.WorkspaceId == workspaceId)
+            .ToListAsync();
+        foreach (var card in assignedCards) card.AssigneeUserId = null;
         context.WorkspaceMembers.Remove(member);
         await context.SaveChangesAsync();
         await realtime.NotifyAsync(workspaceId, "member-removed", memberUserId, HttpContext.RequestAborted);

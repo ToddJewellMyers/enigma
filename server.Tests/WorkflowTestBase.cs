@@ -44,6 +44,6 @@ public abstract class WorkflowTestBase(KanbanApiFactory factory)
     protected record WorkspaceMemberDto(Guid UserId, string Email, string Role, DateTime JoinedAt);
     protected record BoardDto(Guid Id, Guid WorkspaceId, string Name);
     protected record ColumnDto(Guid Id, Guid BoardId, string Name, int Position);
-    protected record CardDto(Guid Id, Guid KanbanColumnId, string Title, int Position, string Priority);
+    protected record CardDto(Guid Id, Guid KanbanColumnId, string Title, int Position, string Priority, Guid? AssigneeUserId = null, string? AssigneeEmail = null);
     protected record AccountExportDto(string Product, List<WorkspaceDto> Workspaces);
 }

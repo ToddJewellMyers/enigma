@@ -28,5 +28,12 @@ public class KanbanCard
 
     public DateTime? DueDate { get; set; }
 
+    public Guid? AssigneeUserId { get; set; }
+
+    [JsonIgnore]
+    public AppUser? Assignee { get; set; }
+
+    public string? AssigneeEmail => Assignee?.Email;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

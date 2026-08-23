@@ -3,9 +3,9 @@ import Card from "./Card";
 import { useColumnCards } from "../../features/cards/useColumnCards";
 import NewCardForm from "../../features/cards/NewCardForm";
 
-type ColumnProps = { id: string; title: string; refreshVersion: number; onCardMoved: () => void; onDelete: () => void; canEdit: boolean };
+type ColumnProps = { id: string; title: string; workspaceId: string; refreshVersion: number; onCardMoved: () => void; onDelete: () => void; canEdit: boolean };
 
-function Column({ id, title, refreshVersion, onCardMoved, onDelete, canEdit }: ColumnProps) {
+function Column({ id, title, workspaceId, refreshVersion, onCardMoved, onDelete, canEdit }: ColumnProps) {
     const [isDragOver, setIsDragOver] = useState(false);
     const cardState = useColumnCards(id, refreshVersion, onCardMoved);
 
@@ -14,7 +14,7 @@ function Column({ id, title, refreshVersion, onCardMoved, onDelete, canEdit }: C
         {canEdit && <NewCardForm columnTitle={title} onCreate={cardState.add} />}
         {cardState.error && <p role="alert" className="mb-3 rounded bg-red-950/50 p-2 text-xs text-red-300">{cardState.error}</p>}
         <div className="flex flex-col gap-3">
-            {cardState.cards.map((card, index) => <Card card={card} onDelete={() => void cardState.remove(card.id)} onSave={(changes) => cardState.update(card.id, changes)} onDropCard={(cardId) => cardState.move(cardId, index + 1)} canEdit={canEdit} key={card.id} />)}
+            {cardState.cards.map((card, index) => <Card card={card} workspaceId={workspaceId} onDelete={() => void cardState.remove(card.id)} onSave={(changes) => cardState.update(card.id, changes)} onDropCard={(cardId) => cardState.move(cardId, index + 1)} canEdit={canEdit} key={card.id} />)}
         </div>
     </div>;
 }

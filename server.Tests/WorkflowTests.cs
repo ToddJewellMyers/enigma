@@ -89,4 +89,24 @@ public class WorkflowTests(KanbanApiFactory factory) : WorkflowTestBase(factory)
         Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/api/cards/{second.Id}")).StatusCode);
         Assert.Empty((await client.GetFromJsonAsync<List<CardDto>>($"/api/cards/{done.Id}", JsonOptions))!);
     }
+
+    [Fact]
+    public async Task Card_can_be_assigned_only_to_a_workspace_member()
+    {
+        var ownerEmail = $"assignee-{Guid.NewGuid()}@example.com";
+        using var client = await CreateAuthenticatedClient(ownerEmail);
+        var workspace = await CreateAsync<WorkspaceDto>(client, "/api/workspaces", new { name = "Assignments" });
+        var owner = Assert.Single((await client.GetFromJsonAsync<List<WorkspaceMemberDto>>($"/api/workspaces/{workspace.Id}/members", JsonOptions))!);
+        var board = await CreateAsync<BoardDto>(client, "/api/boards", new { workspaceId = workspace.Id, name = "Sprint" });
+        var column = await CreateAsync<ColumnDto>(client, "/api/columns", new { boardId = board.Id, name = "Ready", position = 1 });
+        var card = await CreateAsync<CardDto>(client, "/api/cards", new { kanbanColumnId = column.Id, title = "Assigned task", position = 1, priority = "Normal" });
+
+        var invalid = await client.PutAsJsonAsync($"/api/cards/{card.Id}", new { title = card.Title, priority = card.Priority, assigneeUserId = Guid.NewGuid() });
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+
+        (await client.PutAsJsonAsync($"/api/cards/{card.Id}", new { title = card.Title, priority = card.Priority, assigneeUserId = owner.UserId })).EnsureSuccessStatusCode();
+        var assigned = Assert.Single((await client.GetFromJsonAsync<List<CardDto>>($"/api/cards/{column.Id}", JsonOptions))!);
+        Assert.Equal(owner.UserId, assigned.AssigneeUserId);
+        Assert.Equal(ownerEmail, assigned.AssigneeEmail);
+    }
 }
