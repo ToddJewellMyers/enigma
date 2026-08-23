@@ -14,7 +14,7 @@ test("a team can verify accounts, collaborate, and complete the core Kanban work
 
     const verificationUrl = await waitForVerificationUrl(request, email);
     await page.goto(verificationUrl);
-    await expect(page.getByRole("banner")).toContainText("SWEET MAHOGANY BOARDS");
+    await expect(page.getByRole("banner").getByRole("img", { name: "Sweet Mahogany Boards" })).toBeVisible();
 
     await page.getByLabel("New workspace name").fill("Launch QA");
     await page.getByRole("button", { name: "+ Workspace" }).click();
