@@ -7,7 +7,7 @@ export async function getBoards(workspaceId: string) {
 }
 
 export async function createBoard(workspaceId: string, name: string) {
-    const response = await api.post<Board>("/boards", {
+    const response = await api.post<Board>("/boards?includeDefaultColumns=true", {
         workspaceId,
         name,
     });
