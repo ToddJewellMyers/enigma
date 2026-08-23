@@ -22,7 +22,7 @@ function Header({ email, isSidebarOpen, onMenuClick, onLogout, onOpenAccount, on
                     <span aria-hidden="true">☰</span>
                 </button>
                 <img
-                    src="/branding/sweet-mahogany-logo-v1.png"
+                    src="/branding/sweet-mahogany-logo-v2.png"
                     alt="Sweet Mahogany Boards"
                     className="brand-logo brand-logo-header"
                 />

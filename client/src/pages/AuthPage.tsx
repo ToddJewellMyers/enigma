@@ -83,7 +83,7 @@ function AuthPage({ onAuthenticated, onOpenTerminal }: AuthPageProps) {
         <main className="mahogany-shell flex min-h-screen items-center justify-center bg-slate-950 p-4 text-white sm:p-6">
             <form onSubmit={handleSubmit} aria-describedby={error ? "auth-error" : message ? "auth-message" : undefined} className="mahogany-auth-panel w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl sm:p-8">
                 <img
-                    src="/branding/sweet-mahogany-logo-v1.png"
+                    src="/branding/sweet-mahogany-logo-v2.png"
                     alt="Sweet Mahogany Boards"
                     className="brand-logo brand-logo-auth mb-6"
                 />
