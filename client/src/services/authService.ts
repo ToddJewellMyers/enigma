@@ -3,8 +3,8 @@ import { api } from "../api/api";
 export type AuthResponse = { token: string; email: string };
 export type MessageResponse = { message: string };
 
-export async function register(email: string, password: string) {
-    return (await api.post<MessageResponse>("/auth/register", { email, password })).data;
+export async function register(email: string, password: string, inviteToken?: string | null) {
+    return (await api.post<MessageResponse | AuthResponse>("/auth/register", { email, password, inviteToken })).data;
 }
 
 export async function login(email: string, password: string) {

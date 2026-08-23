@@ -7,6 +7,29 @@ namespace server.Tests;
 public class CollaborationTests(KanbanApiFactory factory) : WorkflowTestBase(factory), IClassFixture<KanbanApiFactory>
 {
     [Fact]
+    public async Task Invited_user_can_register_when_email_delivery_fails()
+    {
+        using var owner = await CreateAuthenticatedClient();
+        var workspace = (await owner.GetFromJsonAsync<List<WorkspaceDto>>("/api/workspaces", JsonOptions))!.First();
+        var invitedEmail = $"invited-{Guid.NewGuid()}@example.com";
+        Factory.EmailSender.FailInvitations = true;
+        try
+        {
+            var invitation = await CreateAsync<WorkspaceInvitationDto>(owner, $"/api/workspaces/{workspace.Id}/invitations", new { email = invitedEmail, role = "Editor" });
+            var inviteToken = GetQueryValue(invitation.InviteUrl!, "inviteToken");
+            using var guest = Factory.CreateClient();
+            var registration = await guest.PostAsJsonAsync("/api/auth/register", new { email = invitedEmail, password = "TestPassword123!", inviteToken });
+            registration.EnsureSuccessStatusCode();
+            var auth = await registration.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+            Assert.False(string.IsNullOrWhiteSpace(auth!.Token));
+        }
+        finally
+        {
+            Factory.EmailSender.FailInvitations = false;
+        }
+    }
+
+    [Fact]
     public async Task Invitation_link_remains_available_when_email_delivery_fails()
     {
         using var owner = await CreateAuthenticatedClient();

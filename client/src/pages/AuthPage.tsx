@@ -13,6 +13,7 @@ function AuthPage({ onAuthenticated, onOpenTerminal }: AuthPageProps) {
     const query = new URLSearchParams(window.location.search);
     const resetToken = query.get("resetToken") ?? "";
     const verificationToken = query.get("verifyToken") ?? "";
+    const inviteToken = query.get("inviteToken") ?? localStorage.getItem("workspace_invite_token");
     const [mode, setMode] = useState<AuthMode>(resetToken ? "reset" : "login");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -52,9 +53,13 @@ function AuthPage({ onAuthenticated, onOpenTerminal }: AuthPageProps) {
         setMessage("");
         try {
             if (mode === "register") {
-                const response = await register(email, password);
-                setMessage(response.message);
-                setPassword("");
+                const response = await register(email, password, inviteToken);
+                if ("token" in response) {
+                    onAuthenticated(response.token, response.email);
+                } else {
+                    setMessage(response.message);
+                    setPassword("");
+                }
             } else if (mode === "forgot") {
                 const response = await forgotPassword(email);
                 setMessage(response.message);
