@@ -21,7 +21,7 @@ function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLo
     }, [onSelectWorkspace]);
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100 lg:h-screen">
+        <div className="mahogany-shell flex min-h-screen flex-col bg-slate-950 text-slate-100 lg:h-screen">
             <a href="#main-content" className="skip-link">Skip to main content</a>
             <Header
                 email={email}

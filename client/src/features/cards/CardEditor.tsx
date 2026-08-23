@@ -19,7 +19,7 @@ export default function CardEditor({ card, onCancel, onSave }: CardEditorProps) 
         } finally { setIsSaving(false); }
     }
 
-    return <article data-card-id={card.id} className="rounded-xl border border-blue-500 bg-slate-800 p-4 shadow-sm">
+    return <article data-card-id={card.id} className="mahogany-card rounded-xl border border-blue-500 bg-slate-800 p-4 shadow-sm">
         <input value={title} onChange={(event) => setTitle(event.target.value)} aria-label="Card title" maxLength={200} className="mb-2 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white outline-none focus:border-blue-500" />
         <textarea value={description} onChange={(event) => setDescription(event.target.value)} aria-label="Card description" placeholder="Description" rows={3} maxLength={4000} className="mb-2 w-full resize-none rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-white outline-none focus:border-blue-500" />
         <div className="mb-3 grid grid-cols-2 gap-2">
