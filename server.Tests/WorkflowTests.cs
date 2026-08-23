@@ -46,6 +46,16 @@ public class WorkflowTests(KanbanApiFactory factory) : WorkflowTestBase(factory)
     }
 
     [Fact]
+    public async Task Board_creation_can_atomically_include_default_columns()
+    {
+        using var client = await CreateAuthenticatedClient();
+        var workspace = await CreateAsync<WorkspaceDto>(client, "/api/workspaces", new { name = "Atomic Board" });
+        var board = await CreateAsync<BoardDto>(client, "/api/boards?includeDefaultColumns=true", new { workspaceId = workspace.Id, name = "Release" });
+        var columns = (await client.GetFromJsonAsync<List<ColumnDto>>($"/api/columns/{board.Id}", JsonOptions))!;
+        Assert.Equal(new[] { "Backlog", "Ready", "In Progress", "Testing", "Done" }, columns.Select(column => column.Name));
+    }
+
+    [Fact]
     public async Task Column_workflow_validates_position_and_preserves_order()
     {
         using var client = await CreateAuthenticatedClient();
