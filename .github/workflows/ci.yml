@@ -87,6 +87,8 @@ jobs:
           Email__Smtp__Host: 127.0.0.1
           Email__Smtp__Port: "1025"
           Email__Smtp__EnableSsl: "false"
+          Email__Smtp__Username: test-user
+          Email__Smtp__Password: test-password
         run: dotnet run --project server/server.csproj --no-restore --no-launch-profile > /tmp/smb-api.log 2>&1 &
       - name: Start web client
         env:
