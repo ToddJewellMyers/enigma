@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<Board> Boards => Set<Board>();
     public DbSet<KanbanColumn> KanbanColumns => Set<KanbanColumn>();
     public DbSet<KanbanCard> KanbanCards => Set<KanbanCard>();
+    public DbSet<CardAttachment> CardAttachments => Set<CardAttachment>();
     public DbSet<WorkspaceMember> WorkspaceMembers => Set<WorkspaceMember>();
     public DbSet<WorkspaceInvitation> WorkspaceInvitations => Set<WorkspaceInvitation>();
 
@@ -40,5 +41,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<KanbanCard>()
             .HasOne(card => card.Assignee).WithMany()
             .HasForeignKey(card => card.AssigneeUserId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<CardAttachment>()
+            .HasOne(attachment => attachment.KanbanCard).WithMany(card => card.Attachments)
+            .HasForeignKey(attachment => attachment.KanbanCardId).OnDelete(DeleteBehavior.Cascade);
     }
 }

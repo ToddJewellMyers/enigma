@@ -12,7 +12,7 @@ namespace server.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class CardsController(AppDbContext context, WorkspaceRealtimeNotifier realtime) : ControllerBase
+public partial class CardsController(AppDbContext context, WorkspaceRealtimeNotifier realtime) : ControllerBase
 {
     [HttpGet("{columnId}")]
     public async Task<ActionResult<List<KanbanCard>>> GetCards(Guid columnId)
@@ -20,6 +20,7 @@ public class CardsController(AppDbContext context, WorkspaceRealtimeNotifier rea
         return await context.KanbanCards
             .Where(c => c.KanbanColumnId == columnId && (c.KanbanColumn!.Board!.Workspace!.UserId == User.GetUserId() || c.KanbanColumn.Board.Workspace.Members.Any(member => member.UserId == User.GetUserId())))
             .Include(c => c.Assignee)
+            .Include(c => c.Attachments)
             .OrderBy(c => c.Position)
             .ToListAsync();
     }
@@ -47,7 +48,7 @@ public class CardsController(AppDbContext context, WorkspaceRealtimeNotifier rea
     public async Task<ActionResult<KanbanCard>> UpdateCard(Guid cardId, UpdateCardRequest request)
     {
         var userId = User.GetUserId();
-        var card = await context.KanbanCards.Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
+        var card = await context.KanbanCards.Include(item => item.Attachments).Include(item => item.KanbanColumn).ThenInclude(column => column!.Board).SingleOrDefaultAsync(item => item.Id == cardId);
 
         if (card is null)
         {

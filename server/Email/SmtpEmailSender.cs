@@ -12,12 +12,16 @@ public sealed class SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEm
     private readonly string _fromName = configuration["Email:FromName"] ?? "Sweet Mahogany Boards";
     private readonly int _port = configuration.GetValue("Email:Smtp:Port", 587);
     private readonly bool _enableSsl = configuration.GetValue("Email:Smtp:EnableSsl", true);
+    private readonly bool _allowUnauthenticated = configuration.GetValue("Email:Smtp:AllowUnauthenticated", false);
+
+    private bool HasCredentials =>
+        !string.IsNullOrWhiteSpace(_username) &&
+        !string.IsNullOrWhiteSpace(_password);
 
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(_host) &&
         !string.IsNullOrWhiteSpace(_fromAddress) &&
-        !string.IsNullOrWhiteSpace(_username) &&
-        !string.IsNullOrWhiteSpace(_password);
+        (HasCredentials || _allowUnauthenticated);
 
     public Task SendEmailVerificationAsync(string recipient, string verificationUrl) => SendAsync(
         recipient,
@@ -52,9 +56,9 @@ public sealed class SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEm
         {
             EnableSsl = _enableSsl,
             DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false,
-            Credentials = new NetworkCredential(_username!, _password!)
+            UseDefaultCredentials = false
         };
+        if (HasCredentials) client.Credentials = new NetworkCredential(_username!, _password!);
 
         try
         {
