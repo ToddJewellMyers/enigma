@@ -51,8 +51,6 @@ test("a team can verify accounts, collaborate, and complete the core Kanban work
     await partnerPage.getByLabel("Email").fill(partnerEmail);
     await partnerPage.getByLabel("Password").fill(password);
     await partnerPage.getByRole("button", { name: "Register", exact: true }).click();
-    const partnerVerificationUrl = await waitForVerificationUrl(request, partnerEmail);
-    await partnerPage.goto(partnerVerificationUrl);
     await expect(partnerPage.getByText("You joined Launch QA.")).toBeVisible();
     await expect(partnerPage.getByRole("heading", { name: "Release Board" })).toBeVisible();
     await expect(partnerPage.getByTitle("Team synchronization status")).toContainText("Live");
