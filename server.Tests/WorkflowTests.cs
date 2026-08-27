@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using Xunit;
 
 namespace server.Tests;
@@ -108,5 +109,46 @@ public class WorkflowTests(KanbanApiFactory factory) : WorkflowTestBase(factory)
         var assigned = Assert.Single((await client.GetFromJsonAsync<List<CardDto>>($"/api/cards/{column.Id}", JsonOptions))!);
         Assert.Equal(owner.UserId, assigned.AssigneeUserId);
         Assert.Equal(ownerEmail, assigned.AssigneeEmail);
+    }
+
+    [Fact]
+    public async Task Card_images_can_be_uploaded_viewed_and_removed()
+    {
+        using var client = await CreateAuthenticatedClient();
+        var workspace = await CreateAsync<WorkspaceDto>(client, "/api/workspaces", new { name = "Art team" });
+        var board = await CreateAsync<BoardDto>(client, "/api/boards", new { workspaceId = workspace.Id, name = "Concept art" });
+        var column = await CreateAsync<ColumnDto>(client, "/api/columns", new { boardId = board.Id, name = "Review", position = 1 });
+        var card = await CreateAsync<CardDto>(client, "/api/cards", new { kanbanColumnId = column.Id, title = "Character sketch", position = 1, priority = "Normal" });
+
+        byte[] png = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x01, 0x02, 0x03];
+        using var form = new MultipartFormDataContent();
+        var image = new ByteArrayContent(png);
+        image.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+        form.Add(image, "file", "concept.png");
+        var upload = await client.PostAsync($"/api/cards/{card.Id}/attachments", form);
+        upload.EnsureSuccessStatusCode();
+        var attachment = (await upload.Content.ReadFromJsonAsync<CardAttachmentDto>(JsonOptions))!;
+        Assert.Equal("concept.png", attachment.FileName);
+        Assert.Equal("image/png", attachment.ContentType);
+
+        var cards = (await client.GetFromJsonAsync<List<CardDto>>($"/api/cards/{column.Id}", JsonOptions))!;
+        Assert.Contains(Assert.Single(cards).Attachments!, item => item.Id == attachment.Id);
+        var download = await client.GetAsync($"/api/cards/{card.Id}/attachments/{attachment.Id}");
+        download.EnsureSuccessStatusCode();
+        Assert.Equal(png, await download.Content.ReadAsByteArrayAsync());
+        Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/api/cards/{card.Id}/attachments/{attachment.Id}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Card_image_upload_rejects_non_image_content()
+    {
+        using var client = await CreateAuthenticatedClient();
+        var workspace = await CreateAsync<WorkspaceDto>(client, "/api/workspaces", new { name = "Safe uploads" });
+        var board = await CreateAsync<BoardDto>(client, "/api/boards", new { workspaceId = workspace.Id, name = "Files" });
+        var column = await CreateAsync<ColumnDto>(client, "/api/columns", new { boardId = board.Id, name = "Review", position = 1 });
+        var card = await CreateAsync<CardDto>(client, "/api/cards", new { kanbanColumnId = column.Id, title = "Attachment", position = 1, priority = "Normal" });
+        using var form = new MultipartFormDataContent();
+        form.Add(new StringContent("not an image"), "file", "malware.exe");
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsync($"/api/cards/{card.Id}/attachments", form)).StatusCode);
     }
 }

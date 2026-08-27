@@ -35,5 +35,7 @@ public class KanbanCard
 
     public string? AssigneeEmail => Assignee?.Email;
 
+    public List<CardAttachment> Attachments { get; set; } = new();
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

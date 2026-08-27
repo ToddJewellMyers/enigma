@@ -8,5 +8,15 @@ export interface KanbanCard {
     dueDate?: string;
     assigneeUserId?: string;
     assigneeEmail?: string;
+    attachments?: CardAttachment[];
+    createdAt: string;
+}
+
+export interface CardAttachment {
+    id: string;
+    kanbanCardId: string;
+    fileName: string;
+    contentType: string;
+    size: number;
     createdAt: string;
 }
