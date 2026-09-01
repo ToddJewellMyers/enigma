@@ -6,6 +6,9 @@ services:
     region: ohio
     dockerfilePath: ./Dockerfile
     dockerContext: .
+    domains:
+      - www.sweetmahogany.net
+    renderSubdomainPolicy: enabled
     healthCheckPath: /health/ready
     autoDeployTrigger: commit
     maxShutdownDelaySeconds: 30
@@ -23,7 +26,7 @@ services:
       - key: Jwt__Key
         generateValue: true
       - key: PublicAppUrl
-        value: https://enigma-kanban.onrender.com
+        value: https://www.sweetmahogany.net
       - key: Email__FromName
         value: Sweet Mahogany Boards
       - key: Email__FromAddress
