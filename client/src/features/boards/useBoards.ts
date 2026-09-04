@@ -121,8 +121,10 @@ export function useBoards(selectedWorkspace: Workspace | null, realtimeRevision:
 
     useEffect(() => {
         if (!selectedWorkspace) return;
-        const refresh = async () => {
-            if (document.visibilityState !== "visible") return;
+        let refreshInProgress = false;
+        const refresh = async (force = false) => {
+            if ((!force && document.visibilityState !== "visible") || refreshInProgress) return;
+            refreshInProgress = true;
             try {
                 const nextBoards = await getBoards(selectedWorkspace.id);
                 const selectedId = activeBoardIdRef.current;
@@ -133,10 +135,24 @@ export function useBoards(selectedWorkspace: Workspace | null, realtimeRevision:
                 setColumns(nextActiveId ? await getColumns(nextActiveId) : []);
             } catch {
                 // The regular action handlers surface errors; background refresh stays quiet.
+            } finally {
+                refreshInProgress = false;
             }
         };
-        const timer = window.setInterval(() => void refresh(), 60_000);
-        return () => window.clearInterval(timer);
+        const refreshWhenVisible = () => {
+            if (document.visibilityState === "visible") void refresh(true);
+        };
+        const refreshNow = () => void refresh(true);
+        const timer = window.setInterval(() => void refresh(), 10_000);
+        window.addEventListener("focus", refreshNow);
+        window.addEventListener("online", refreshNow);
+        document.addEventListener("visibilitychange", refreshWhenVisible);
+        return () => {
+            window.clearInterval(timer);
+            window.removeEventListener("focus", refreshNow);
+            window.removeEventListener("online", refreshNow);
+            document.removeEventListener("visibilitychange", refreshWhenVisible);
+        };
     }, [selectedWorkspace]);
 
     return { boards, columns, activeBoardId, activeBoard: boards.find((board) => board.id === activeBoardId), error, addBoard, removeBoard, addColumn, removeColumn, selectBoard };
