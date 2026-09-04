@@ -25,6 +25,7 @@ function Dashboard({ email, inviteToken, onInviteHandled, onLogout, onAccountDel
     const [realtimeRevision, setRealtimeRevision] = useState(0);
     const invitationAttempted = useRef(false);
     const handleRealtimeChange = useCallback(() => setRealtimeRevision((revision) => revision + 1), []);
+    const syncNow = useCallback(() => setRealtimeRevision((revision) => revision + 1), []);
     const realtimeStatus = useWorkspaceRealtime(selectedWorkspace?.id ?? null, handleRealtimeChange);
 
     useEffect(() => {
@@ -52,6 +53,7 @@ function Dashboard({ email, inviteToken, onInviteHandled, onLogout, onAccountDel
             onOpenTerminal={onOpenTerminal}
             realtimeStatus={realtimeStatus}
             workspaceRefreshVersion={realtimeRevision}
+            onSyncNow={syncNow}
         >
             {notice && <p role="status" className="mb-4 rounded-lg border border-blue-800 bg-blue-950/40 p-3 text-sm text-blue-200">{notice}</p>}
             <Board selectedWorkspace={selectedWorkspace} onOpenTeam={() => setIsTeamOpen(true)} realtimeRevision={realtimeRevision} />

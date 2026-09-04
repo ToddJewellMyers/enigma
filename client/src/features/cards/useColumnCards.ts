@@ -51,13 +51,34 @@ export function useColumnCards(columnId: string, refreshVersion: number, onCardM
     }
 
     useEffect(() => {
-        const load = () => getCards(columnId).then((data) => { setCards(data); setError(""); })
-            .catch((requestError: unknown) => setError(getErrorMessage(requestError, "Cards could not be loaded.")));
-        void load();
-        const timer = window.setInterval(() => {
-            if (document.visibilityState === "visible") void load();
-        }, 60_000);
-        return () => window.clearInterval(timer);
+        let loadInProgress = false;
+        const load = async (force = false) => {
+            if ((!force && document.visibilityState !== "visible") || loadInProgress) return;
+            loadInProgress = true;
+            try {
+                setCards(await getCards(columnId));
+                setError("");
+            } catch (requestError) {
+                setError(getErrorMessage(requestError, "Cards could not be loaded."));
+            } finally {
+                loadInProgress = false;
+            }
+        };
+        const loadWhenVisible = () => {
+            if (document.visibilityState === "visible") void load(true);
+        };
+        const loadNow = () => void load(true);
+        void load(true);
+        const timer = window.setInterval(() => void load(), 10_000);
+        window.addEventListener("focus", loadNow);
+        window.addEventListener("online", loadNow);
+        document.addEventListener("visibilitychange", loadWhenVisible);
+        return () => {
+            window.clearInterval(timer);
+            window.removeEventListener("focus", loadNow);
+            window.removeEventListener("online", loadNow);
+            document.removeEventListener("visibilitychange", loadWhenVisible);
+        };
     }, [columnId, refreshVersion]);
 
     return { cards, error, add, move, remove, update };

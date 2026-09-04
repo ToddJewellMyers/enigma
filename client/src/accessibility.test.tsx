@@ -24,6 +24,7 @@ describe("accessibility", () => {
                 onLogout={() => undefined}
                 onOpenAccount={() => undefined}
                 realtimeStatus="live"
+                onSyncNow={() => undefined}
             />
         );
 

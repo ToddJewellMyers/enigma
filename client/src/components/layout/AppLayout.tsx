@@ -14,9 +14,10 @@ type AppLayoutProps = {
     onOpenTerminal?: () => void;
     realtimeStatus: RealtimeStatus;
     workspaceRefreshVersion: number;
+    onSyncNow: () => void;
 };
 
-function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLogout, onOpenAccount, onOpenTerminal, realtimeStatus, workspaceRefreshVersion }: AppLayoutProps) {
+function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLogout, onOpenAccount, onOpenTerminal, realtimeStatus, workspaceRefreshVersion, onSyncNow }: AppLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const handleSelectWorkspace = useCallback((workspace: Workspace | null) => {
         onSelectWorkspace(workspace);
@@ -34,6 +35,7 @@ function AppLayout({ children, selectedWorkspace, onSelectWorkspace, email, onLo
                 onOpenAccount={onOpenAccount}
                 onOpenTerminal={onOpenTerminal}
                 realtimeStatus={realtimeStatus}
+                onSyncNow={onSyncNow}
             />
 
             <div className="flex flex-1 overflow-hidden">
