@@ -6,6 +6,7 @@ import { getWorkspaceMembers } from "../../services/workspaceService";
 import { deleteCardAttachment, uploadCardAttachment } from "../../services/cardService";
 import { getErrorMessage } from "../../api/errorMessage";
 import CardAttachmentImage from "./CardAttachmentImage";
+import { prepareImageUpload } from "./prepareImageUpload";
 
 type CardEditorProps = { card: KanbanCard; workspaceId: string; onCancel: () => void; onSave: (update: CardUpdate) => Promise<void>; onAttachmentsChange?: (attachments: CardAttachment[]) => void };
 
@@ -19,6 +20,7 @@ export default function CardEditor({ card, workspaceId, onCancel, onSave, onAtta
     const [isSaving, setIsSaving] = useState(false);
     const [attachments, setAttachments] = useState(card.attachments ?? []);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState("");
     const [attachmentError, setAttachmentError] = useState("");
 
     function updateAttachments(next: CardAttachment[]) {
@@ -28,18 +30,29 @@ export default function CardEditor({ card, workspaceId, onCancel, onSave, onAtta
 
     async function upload(files: FileList | null) {
         if (!files?.length) return;
+        const selectedFiles = Array.from(files);
+        const remainingSlots = 5 - attachments.length;
+        if (selectedFiles.length > remainingSlots) {
+            setAttachmentError(`You can add ${remainingSlots} more ${remainingSlots === 1 ? "photo" : "photos"} to this card.`);
+            return;
+        }
         setAttachmentError("");
         setIsUploading(true);
         try {
             let next = [...attachments];
-            for (const file of Array.from(files)) {
-                const attachment = await uploadCardAttachment(card.id, file);
+            for (const [index, file] of selectedFiles.entries()) {
+                setUploadProgress(`${index + 1}/${selectedFiles.length}`);
+                const preparedFile = await prepareImageUpload(file);
+                const attachment = await uploadCardAttachment(card.id, preparedFile);
                 next = [...next, attachment];
                 updateAttachments(next);
             }
         } catch (requestError) {
             setAttachmentError(getErrorMessage(requestError, "The image could not be uploaded."));
-        } finally { setIsUploading(false); }
+        } finally {
+            setIsUploading(false);
+            setUploadProgress("");
+        }
     }
 
     async function removeAttachment(attachmentId: string) {
@@ -85,10 +98,10 @@ export default function CardEditor({ card, workspaceId, onCancel, onSave, onAtta
             <div className="mb-2 flex items-center justify-between gap-2"><span className="text-xs font-semibold text-amber-100">Artwork & screenshots</span><span className="text-xs text-slate-400">{attachments.length}/5</span></div>
             {attachments.length > 0 && <div className="mb-3 grid grid-cols-2 gap-2">{attachments.map((attachment) => <div key={attachment.id} className="relative"><CardAttachmentImage cardId={card.id} attachment={attachment} className="aspect-video w-full rounded border border-amber-900/50" /><button type="button" onClick={() => void removeAttachment(attachment.id)} aria-label={`Remove ${attachment.fileName}`} className="absolute right-1 top-1 rounded-full bg-black/80 px-2 py-0.5 text-sm text-white hover:bg-red-700">×</button></div>)}</div>}
             <label className={`block cursor-pointer rounded border border-dashed border-amber-700 px-3 py-2 text-center text-xs font-semibold text-amber-100 hover:bg-amber-900/20 ${isUploading || attachments.length >= 5 ? "pointer-events-none opacity-50" : ""}`}>
-                {isUploading ? "Uploading…" : "Add photos"}
-                <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple className="sr-only" disabled={isUploading || attachments.length >= 5} onChange={(event) => { void upload(event.target.files); event.currentTarget.value = ""; }} />
+                {isUploading ? `Uploading ${uploadProgress}…` : "Add photos"}
+                <input type="file" accept="image/*,.heic,.heif" multiple className="sr-only" disabled={isUploading || attachments.length >= 5} onChange={(event) => { void upload(event.target.files); event.currentTarget.value = ""; }} />
             </label>
-            <p className="mt-2 text-[11px] text-slate-400">JPEG, PNG, GIF, or WebP · up to 5 MB each</p>
+            <p className="mt-2 text-[11px] text-slate-400">JPEG, PNG, GIF, WebP, HEIC, or HEIF · large photos are resized automatically</p>
             {attachmentError && <p role="alert" className="mt-2 text-xs text-red-300">{attachmentError}</p>}
         </div>
         <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded px-3 py-1 text-xs text-slate-300 hover:bg-slate-700">Cancel</button><button type="button" onClick={() => void save()} disabled={isSaving || !title.trim()} className="rounded bg-blue-600 px-3 py-1 text-xs font-bold text-white disabled:opacity-50">{isSaving ? "Saving…" : "Save"}</button></div>
