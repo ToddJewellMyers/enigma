@@ -13,6 +13,6 @@ describe("prepareImageUpload", () => {
     });
 
     it("publishes the same maximum size enforced by the API", () => {
-        expect(MAXIMUM_UPLOAD_BYTES).toBe(5 * 1024 * 1024);
+        expect(MAXIMUM_UPLOAD_BYTES).toBe(15 * 1024 * 1024);
     });
 });

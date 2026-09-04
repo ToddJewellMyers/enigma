@@ -1,6 +1,6 @@
-const MAXIMUM_UPLOAD_BYTES = 5 * 1024 * 1024;
-const TARGET_UPLOAD_BYTES = 4.5 * 1024 * 1024;
-const MAXIMUM_IMAGE_DIMENSION = 2560;
+const MAXIMUM_UPLOAD_BYTES = 15 * 1024 * 1024;
+const TARGET_UPLOAD_BYTES = 14 * 1024 * 1024;
+const MAXIMUM_IMAGE_DIMENSION = 4096;
 const SERVER_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
 
 function isLikelyImage(file: File) {

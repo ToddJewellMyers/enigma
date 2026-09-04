@@ -101,7 +101,7 @@ export default function CardEditor({ card, workspaceId, onCancel, onSave, onAtta
                 {isUploading ? `Uploading ${uploadProgress}…` : "Add photos"}
                 <input type="file" accept="image/*,.heic,.heif" multiple className="sr-only" disabled={isUploading || attachments.length >= 5} onChange={(event) => { void upload(event.target.files); event.currentTarget.value = ""; }} />
             </label>
-            <p className="mt-2 text-[11px] text-slate-400">JPEG, PNG, GIF, WebP, HEIC, or HEIF · large photos are resized automatically</p>
+            <p className="mt-2 text-[11px] text-slate-400">JPEG, PNG, GIF, WebP, HEIC, or HEIF · up to 15 MB each · larger photos are resized automatically</p>
             {attachmentError && <p role="alert" className="mt-2 text-xs text-red-300">{attachmentError}</p>}
         </div>
         <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded px-3 py-1 text-xs text-slate-300 hover:bg-slate-700">Cancel</button><button type="button" onClick={() => void save()} disabled={isSaving || !title.trim()} className="rounded bg-blue-600 px-3 py-1 text-xs font-bold text-white disabled:opacity-50">{isSaving ? "Saving…" : "Save"}</button></div>

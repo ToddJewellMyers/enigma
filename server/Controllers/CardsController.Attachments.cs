@@ -8,7 +8,7 @@ namespace server.Controllers;
 public partial class CardsController
 {
     private const int MaximumAttachmentCount = 5;
-    private const int MaximumAttachmentBytes = 5 * 1024 * 1024;
+    private const int MaximumAttachmentBytes = 15 * 1024 * 1024;
 
     [HttpPost("{cardId}/attachments")]
     [RequestSizeLimit(MaximumAttachmentBytes + 64 * 1024)]
@@ -22,7 +22,7 @@ public partial class CardsController
         var workspaceId = card.KanbanColumn!.Board!.WorkspaceId;
         if (!await WorkspaceAuthorization.CanEdit(context, workspaceId, User.GetUserId())) return Forbid();
         if (file.Length is <= 0 or > MaximumAttachmentBytes)
-            return BadRequest("Choose an image no larger than 5 MB.");
+            return BadRequest("Choose an image no larger than 15 MB.");
         if (card.Attachments.Count >= MaximumAttachmentCount)
             return BadRequest("A card can have up to 5 images.");
 
